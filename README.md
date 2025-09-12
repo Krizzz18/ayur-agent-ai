@@ -1,73 +1,210 @@
-# Welcome to your Lovable project
+# AyurAgent - AI-Powered Ayurvedic Wellness Platform
 
-## Project info
+**DevForge Hackathon - DevSpark'25**  
+*Built in 24 hours (Sept 12-13, 2025)*
 
-**URL**: https://lovable.dev/projects/b37c79c8-9f8e-4949-ba57-5c27670b027d
+---
 
-## How can I edit this code?
+## 🚀 Problem Statement
 
-There are several ways of editing your application.
+India has a rich tradition of Ayurveda, but accessing personalized Ayurvedic care remains challenging for 1.4 billion people. Traditional practitioners are limited, and modern healthcare often overlooks holistic approaches. **AyurAgent** bridges this gap by delivering AI-powered, personalized Ayurvedic recommendations through an innovative multi-agent system.
 
-**Use Lovable**
+## 🧠 Innovation & Methodology
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/b37c79c8-9f8e-4949-ba57-5c27670b027d) and start prompting.
+### Multi-Agent AI Architecture
 
-Changes made via Lovable will be committed automatically to this repo.
+AyurAgent implements four specialized AI agents working in harmony:
 
-**Use your preferred IDE**
+1. **Intake Agent** - Collects user symptoms, lifestyle, and environment data through conversational interface
+2. **Analysis Agent** - Processes user data using ML algorithms to determine primary dosha constitution 
+3. **Recommendation Agent** - Generates personalized wellness plans with safety validations
+4. **Monitoring Agent** - Provides ongoing support, reminders, and plan adaptations
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Technical Approach
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- **Frontend**: React + TypeScript + Tailwind CSS with social media-inspired UX
+- **AI Integration**: Browser-based dosha analysis using RandomForest-inspired logic
+- **Design System**: Ayurvedic color palette (Vata-purple, Pitta-golden, Kapha-green)
+- **User Experience**: Gamified progress tracking with achievements and streaks
+- **Responsive Design**: Mobile-first approach with accessibility features
 
-Follow these steps:
+## 📋 Features
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### 🤖 Intelligent Chat Interface
+- Real-time conversation with specialized AI agents
+- Context-aware questioning for accurate dosha assessment
+- Visual agent identification with role-based responses
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### 📊 Personalized Wellness Dashboard
+- Dosha-specific daily routines (Dinacharya)
+- Seasonal adjustments and weather-based recommendations  
+- Interactive progress tracking with circular gauges
+- Achievement system with badges and streaks
 
-# Step 3: Install the necessary dependencies.
-npm i
+### 📱 Social Media-Inspired UX
+- Instagram-like story cards for daily tasks
+- Swipeable plan sections with collapsible details
+- Progress sharing and milestone celebrations
+- Engaging animations and micro-interactions
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### 🌿 Comprehensive Ayurvedic Plans
+- **Daily Routines**: Time-specific activities for dosha balance
+- **Dietary Guidelines**: Personalized food recommendations 
+- **Herbal Medicine**: Safe, traditional herb suggestions
+- **Lifestyle Adjustments**: Exercise, meditation, and sleep optimization
+
+## 🛠 Setup & Installation
+
+```bash
+# Clone the repository
+git clone [repository-url]
+cd ayuragent
+
+# Install dependencies
+npm install
+
+# Start development server
 npm run dev
+
+# Access application at http://localhost:8080
 ```
 
-**Edit a file directly in GitHub**
+## 📊 Demo & Testing
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Sample User Journey
+1. **Symptom Input**: "I'm experiencing stress, irregular sleep, and digestive issues"
+2. **Profile Collection**: Age 28, Location Delhi, Busy lifestyle
+3. **AI Analysis**: Primary dosha identified as Vata (Air + Space)
+4. **Personalized Plan**: 
+   - Morning oil massage at 6 AM
+   - Warm, moist foods throughout day
+   - Ashwagandha for stress relief
+   - Consistent sleep schedule
 
-**Use GitHub Codespaces**
+### Expected Outcomes
+- 80%+ dosha prediction accuracy based on symptom patterns
+- Personalized recommendations within 2 minutes
+- Social media engagement levels (daily app usage)
+- Rural accessibility through simple chat interface
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🏆 Hackathon Compliance
 
-## What technologies are used for this project?
+### IEEE Code of Ethics Adherence
+- **Integrity**: Original codebase with proper citations
+- **Safety**: Medical disclaimers and severity condition warnings
+- **Transparency**: Open-source approach with clear methodology
+- **Responsibility**: Cultural sensitivity in Ayurvedic representation
 
-This project is built with:
+### Technical Requirements Met
+- ✅ Built in 24 hours using only free tools
+- ✅ No plagiarized code - original implementation
+- ✅ Scalable architecture for 1.4 billion users
+- ✅ Browser-based deployment (no server dependencies)
+- ✅ Responsive design for mobile accessibility
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Review Schedule
+- **Review 1**: September 12, 6:00 PM IST - Architecture & Core Features
+- **Review 2**: September 12, 10:00 PM IST - UI/UX & Integration Testing  
+- **Review 3**: September 13, 12:00 PM IST - Final Demo & Documentation
 
-## How can I deploy this project?
+## 📈 Market Impact & Scalability
 
-Simply open [Lovable](https://lovable.dev/projects/b37c79c8-9f8e-4949-ba57-5c27670b027d) and click on Share -> Publish.
+### Target Audience
+- **Primary**: Urban millennials seeking holistic wellness (25-40 years)
+- **Secondary**: Rural populations with limited healthcare access
+- **Tertiary**: Ayurveda practitioners for patient engagement
 
-## Can I connect a custom domain to my Lovable project?
+### Business Potential
+- Freemium model with premium personalized consultations
+- Integration with Ayush Ministry initiatives
+- Corporate wellness program partnerships
+- International expansion to wellness-conscious markets
 
-Yes, you can!
+### Social Impact
+- Democratizes access to Ayurvedic knowledge
+- Preserves traditional healing wisdom through AI
+- Reduces healthcare burden through preventive care
+- Bridges urban-rural healthcare gap
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 🔬 Technical Architecture
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+```
+┌─ Frontend (React + TypeScript) ─┐
+│  ├─ Chat Interface              │
+│  ├─ Dashboard Components        │
+│  ├─ Progress Tracking           │
+│  └─ Responsive Design System    │
+└──────────────────────────────────┘
+           │
+           ▼
+┌─ AI Agent System ───────────────┐
+│  ├─ Intake Agent (Data Collection)
+│  ├─ Analysis Agent (ML Processing)
+│  ├─ Recommendation Agent (Plan Generation)
+│  └─ Monitoring Agent (Follow-up)
+└──────────────────────────────────┘
+           │
+           ▼
+┌─ Data Layer ────────────────────┐
+│  ├─ Dosha Classification Logic  │
+│  ├─ Ayurvedic Knowledge Base    │
+│  ├─ User Profile Management     │
+│  └─ Progress Analytics          │
+└──────────────────────────────────┘
+```
+
+## 📚 References & Citations
+
+### Datasets & APIs
+- Ayurvedic symptom-dosha mapping datasets (open source)
+- Traditional Ayurvedic texts (Charaka Samhita, Sushruta Samhita)
+- Modern research on dosha constitution assessment
+
+### Technologies
+- React 18.3+ with TypeScript for type safety
+- Tailwind CSS for responsive design system
+- Lucide React for consistent iconography
+- Browser APIs for local storage and offline functionality
+
+## 🎯 Future Roadmap
+
+### Phase 2 Enhancements
+- Integration with wearable devices for biometric data
+- Advanced ML models for more precise dosha analysis
+- Telemedicine integration with certified Ayurvedic practitioners
+- Community features for peer support and knowledge sharing
+
+### Phase 3 Expansion
+- Multi-language support for regional Indian languages
+- IoT integration for smart home wellness automation
+- Blockchain-based health record management
+- AI-powered herb identification through image recognition
+
+## 🏅 Winning Edge
+
+### Innovation Highlights
+1. **First-of-its-kind** multi-agent system for Ayurvedic care
+2. **Cultural Bridge** between ancient wisdom and modern AI
+3. **Social Impact** addressing healthcare accessibility for billions
+4. **Technical Excellence** with scalable, maintainable architecture
+5. **User Experience** gamification meets traditional healing
+
+### Demo Highlights
+- Live dosha assessment in under 2 minutes
+- Real-time plan generation with weather integration
+- Social media-level engagement through progress tracking
+- Rural user story simulation with voice assistance
+
+---
+
+**Built with ❤️ for DevForge Hackathon DevSpark'25**  
+*Bridging Ancient Wisdom with Modern AI for Global Wellness*
+
+## 📞 Team Contact
+
+**Venue**: KPRIET  
+**Event**: DevSpark'25 DevForge Hackathon  
+**Duration**: 24 hours (Sept 12-13, 2025)  
+**Focus**: Healthcare Innovation through AI
+
+*"Where 5000-year-old Ayurveda meets cutting-edge AI to heal 1.4 billion lives"*
