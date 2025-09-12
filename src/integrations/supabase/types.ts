@@ -14,7 +14,117 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      consultations: {
+        Row: {
+          agent_type: string | null
+          created_at: string
+          id: string
+          message_text: string
+          message_type: string
+          recommendations: Json | null
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          agent_type?: string | null
+          created_at?: string
+          id?: string
+          message_text: string
+          message_type: string
+          recommendations?: Json | null
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          agent_type?: string | null
+          created_at?: string
+          id?: string
+          message_text?: string
+          message_type?: string
+          recommendations?: Json | null
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      daily_routines: {
+        Row: {
+          activity: string
+          completed: boolean | null
+          created_at: string
+          id: string
+          notes: string | null
+          routine_date: string
+          routine_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity: string
+          completed?: boolean | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          routine_date?: string
+          routine_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activity?: string
+          completed?: boolean | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          routine_date?: string
+          routine_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          age: number | null
+          avatar_url: string | null
+          created_at: string
+          dosha: string | null
+          full_name: string | null
+          id: string
+          location: string | null
+          phone: string | null
+          preferences: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          age?: number | null
+          avatar_url?: string | null
+          created_at?: string
+          dosha?: string | null
+          full_name?: string | null
+          id?: string
+          location?: string | null
+          phone?: string | null
+          preferences?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          age?: number | null
+          avatar_url?: string | null
+          created_at?: string
+          dosha?: string | null
+          full_name?: string | null
+          id?: string
+          location?: string | null
+          phone?: string | null
+          preferences?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -115,6 +115,69 @@ All colors MUST be HSL for theme consistency.
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
+  /* Ayur Classic Theme */
+  .ayur-classic {
+    --background: 45 30% 96%;
+    --foreground: 35 45% 12%;
+    --card: 45 25% 98%;
+    --card-foreground: 35 45% 12%;
+    --primary: 45 80% 45%;
+    --primary-foreground: 45 25% 98%;
+    --secondary: 35 60% 60%;
+    --secondary-foreground: 35 25% 98%;
+    --tertiary: 120 30% 40%;
+    --tertiary-foreground: 35 25% 98%;
+    --muted: 45 20% 90%;
+    --muted-foreground: 35 30% 40%;
+    --accent: 45 80% 45%;
+    --accent-foreground: 45 25% 98%;
+    --border: 45 25% 82%;
+    --input: 45 20% 93%;
+    --ring: 45 80% 45%;
+  }
+
+  /* Ayur Forest Theme */
+  .ayur-forest {
+    --background: 140 25% 95%;
+    --foreground: 140 60% 8%;
+    --card: 140 20% 97%;
+    --card-foreground: 140 60% 8%;
+    --primary: 140 50% 35%;
+    --primary-foreground: 140 20% 97%;
+    --secondary: 160 40% 45%;
+    --secondary-foreground: 140 20% 97%;
+    --tertiary: 100 35% 40%;
+    --tertiary-foreground: 140 20% 97%;
+    --muted: 140 15% 88%;
+    --muted-foreground: 140 35% 35%;
+    --accent: 140 50% 35%;
+    --accent-foreground: 140 20% 97%;
+    --border: 140 20% 80%;
+    --input: 140 15% 92%;
+    --ring: 140 50% 35%;
+  }
+
+  /* Ayur Sunset Theme */
+  .ayur-sunset {
+    --background: 20 40% 94%;
+    --foreground: 20 60% 10%;
+    --card: 20 35% 96%;
+    --card-foreground: 20 60% 10%;
+    --primary: 15 75% 50%;
+    --primary-foreground: 20 35% 96%;
+    --secondary: 35 70% 55%;
+    --secondary-foreground: 20 35% 96%;
+    --tertiary: 5 65% 45%;
+    --tertiary-foreground: 20 35% 96%;
+    --muted: 20 25% 87%;
+    --muted-foreground: 20 40% 30%;
+    --accent: 15 75% 50%;
+    --accent-foreground: 20 35% 96%;
+    --border: 20 30% 78%;
+    --input: 20 25% 90%;
+    --ring: 15 75% 50%;
+  }
 }
 
 @layer base {

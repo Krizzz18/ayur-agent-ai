@@ -1,14 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import DashboardHome from '@/components/DashboardHome';
 import ChatInterface from '@/components/ChatInterface';
 import PlansView from '@/components/PlansView';
 import ProgressTracker from '@/components/ProgressTracker';
+import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [userDosha, setUserDosha] = useState<string>('');
   const [recommendations, setRecommendations] = useState<any>(null);
+  const { user, loading } = useAuth();
+
+  useEffect(() => {
+    // Redirect to landing page if not authenticated
+    if (!loading && !user) {
+      window.location.href = '/';
+    }
+  }, [user, loading]);
 
   const handleDoshaAnalysisComplete = (dosha: string, recs: any) => {
     setUserDosha(dosha);
@@ -31,6 +42,29 @@ const Index = () => {
         return <DashboardHome userDosha={userDosha || 'Vata'} />;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-background">
+        <Card className="p-8 text-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-background">
+        <Card className="p-8 text-center">
+          <p className="text-muted-foreground mb-4">Please sign in to access your wellness dashboard</p>
+          <Button onClick={() => window.location.href = '/auth'}>
+            Sign In
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-background">
