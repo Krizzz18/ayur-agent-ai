@@ -17,6 +17,7 @@ import {
 
 interface ProgressTrackerProps {
   userDosha?: string;
+  recommendations?: any;
 }
 
 const ProgressTracker: React.FC<ProgressTrackerProps> = ({ userDosha = 'Vata' }) => {

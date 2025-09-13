@@ -1,8 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User } from 'lucide-react';
+import { Send, Bot, User, Download, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import { usePDFExport } from '@/hooks/usePDFExport';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 
 interface Message {
   id: string;
@@ -30,6 +34,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onDoshaAnalysisComplete }
   const [isTyping, setIsTyping] = useState(false);
   const [currentPhase, setCurrentPhase] = useState<'intake' | 'analysis' | 'recommendation' | 'monitoring'>('intake');
   const [userProfile, setUserProfile] = useState<any>({});
+  const [analysisResult, setAnalysisResult] = useState<{ dosha: string; recommendations: any } | null>(null);
+  
+  const { exportToPDF, exportConsultationHistory } = usePDFExport();
+  const { user } = useAuth();
+  const { toast } = useToast();
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -42,12 +51,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onDoshaAnalysisComplete }
   }, [messages]);
 
   const doshaQuestions = [
-    "What symptoms are you experiencing? (e.g., stress, digestion issues, fatigue)",
-    "What's your age range? (e.g., 20-30, 30-40, 40-50, etc.)",
-    "Which city are you located in?",
-    "How would you describe your daily routine and lifestyle?",
-    "What's your current diet like?",
-    "How do you typically handle stress?",
+    "In simple words, what problem do you want help with? (e.g., poor sleep, stress, headache, digestion, skin issues)",
+    "What is your age range? (e.g., 18–25, 26–35, 36–45, 46+)",
+    "Which city and country do you live in?",
+    "Describe your daily routine in simple words (sleep time, work hours, activity level).",
+    "What do you usually eat in a day? (Breakfast, lunch, dinner, snacks, cold/hot drinks)",
+    "How do you feel during stress? (e.g., worry, anger, slow/low energy)",
   ];
 
   const analyzeDoshaFromProfile = (profile: any): string => {
@@ -81,76 +90,136 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onDoshaAnalysisComplete }
   };
 
   const generateRecommendations = (dosha: string, profile: any) => {
-    const recommendations = {
+    const base = {
       Vata: {
         dailyRoutine: [
-          "Wake up at 6 AM consistently",
-          "Start with warm oil massage (Abhyanga)",
-          "Practice gentle yoga or stretching",
+          "Wake up at a consistent time (before 7 AM if possible)",
+          "Warm oil self-massage (Abhyanga)",
+          "Gentle yoga or stretching",
           "Eat warm, cooked meals at regular times",
-          "Meditation for 15 minutes before sleep"
+          "Evening wind-down: light reading/meditation"
         ],
         diet: [
-          "Warm, moist, and slightly oily foods",
-          "Cooked grains like rice and oats",
-          "Root vegetables and sweet fruits",
-          "Warm milk with spices before bed",
-          "Avoid cold, dry, and raw foods"
+          "Favor warm, moist, slightly oily foods",
+          "Cooked grains (rice, oats), root vegetables",
+          "Sweet fruits; avoid cold/raw foods",
+          "Spiced milk or herbal tea at night"
         ],
         herbs: [
-          "Ashwagandha for stress relief",
-          "Brahmi for mental clarity",
-          "Jatamansi for better sleep",
-          "Warm sesame oil for massage"
+          "Ashwagandha for stress balance",
+          "Brahmi for focus",
+          "Sesame oil for massage"
         ]
       },
       Pitta: {
         dailyRoutine: [
-          "Wake up at 5:30 AM during cool hours",
-          "Practice cooling pranayama",
-          "Moderate exercise, avoid intense heat",
-          "Eat cooling foods, avoid spicy meals",
-          "Meditation in a cool, calm environment"
+          "Wake up during cool hours (around 5:30–6:30 AM)",
+          "Cooling pranayama (sheetali/sitali)",
+          "Moderate exercise; avoid peak heat",
+          "Prefer cooling, mildly spiced meals",
+          "Evening: calming activities in a cool space"
         ],
         diet: [
-          "Cool, fresh, and sweet foods",
-          "Coconut water and fresh fruit juices",
-          "Leafy greens and cucumber",
-          "Avoid spicy, sour, and fermented foods",
-          "Rose water and mint teas"
+          "Cool, fresh, and sweet/bitter foods",
+          "Coconut water, mint, leafy greens",
+          "Avoid very spicy, sour, fermented foods"
         ],
         herbs: [
           "Amla for cooling and immunity",
-          "Aloe vera for inflammation",
-          "Neem for skin health",
+          "Aloe vera for heat/inflammation",
           "Coconut oil for massage"
         ]
       },
       Kapha: {
         dailyRoutine: [
-          "Wake up at 5 AM for energizing start",
-          "Vigorous exercise like jogging",
-          "Light, warm, and spicy foods",
+          "Wake up early (around 5–6 AM)",
+          "Energizing exercise (brisk walk/jog)",
           "Dry brushing before shower",
-          "Active evening activities"
+          "Light, warm, mildly spicy meals",
+          "Stay active after sunset; avoid heavy dinners"
         ],
         diet: [
-          "Light, warm, and spicy foods",
-          "Ginger tea and turmeric milk",
-          "Steamed vegetables with spices",
-          "Avoid heavy, oily, and sweet foods",
-          "Honey (unheated) as sweetener"
+          "Light, warm, gently spicy foods",
+          "Ginger tea; steamed veggies with spices",
+          "Avoid heavy, oily, and very sweet foods"
         ],
         herbs: [
           "Triphala for digestion",
           "Guggul for metabolism",
-          "Tulsi for respiratory health",
-          "Mustard oil for massage"
+          "Tulsi for respiratory health"
         ]
       }
+    } as const;
+
+    const text = (
+      [profile?.symptoms, profile?.lifestyle, profile?.diet, profile?.stress]
+        .filter(Boolean)
+        .join(' ') || ''
+    ).toLowerCase();
+
+    const tags = {
+      insomnia: /insomnia|sleep|sleepless|night/.test(text),
+      anxiety: /anxiety|anxious|stress|worry|tension|panic/.test(text),
+      digestion: /bloat|gas|constipation|indigestion|digestion|acidity|heartburn|reflux/.test(text),
+      acidity: /acidity|heartburn|reflux|ulcer/.test(text),
+      skin: /acne|pimple|rash|eczema|psoriasis|skin/.test(text),
+      weight: /weight|obese|overweight|fat|gain/.test(text),
+      headache: /headache|migraine|head pain/.test(text),
+      fatigue: /fatigue|tired|low energy|exhausted|weak/.test(text),
     };
 
-    return recommendations[dosha as keyof typeof recommendations];
+    const plan = JSON.parse(JSON.stringify(base[dosha as keyof typeof base]));
+
+    if (tags.insomnia) {
+      plan.dailyRoutine.unshift(
+        "Sleep by 10 PM; avoid screens 1 hour before bed",
+        "Warm milk with nutmeg or ashwagandha at night"
+      );
+      plan.herbs.push("Jatamansi for better sleep");
+    }
+
+    if (tags.digestion) {
+      plan.dailyRoutine.unshift(
+        "Sip warm ginger water 15 mins before meals",
+        "Make lunch your largest meal"
+      );
+      plan.herbs.push("Triphala at night (as advised)");
+    }
+
+    if (tags.acidity) {
+      plan.diet.unshift("Favor cooling foods: cucumber, coconut water, mint");
+      plan.dailyRoutine.unshift("Avoid very spicy/fermented foods; never skip meals");
+      plan.herbs.push("Aloe vera juice in the morning (as advised)");
+    }
+
+    if (tags.anxiety) {
+      plan.dailyRoutine.unshift("10–15 min calming breathing twice daily (box breathing)");
+      plan.herbs.push("Ashwagandha for stress balance");
+    }
+
+    if (tags.weight) {
+      plan.dailyRoutine.unshift(
+        "30–40 min brisk walk/cardio in the morning",
+        "Avoid daytime naps"
+      );
+      plan.diet.unshift("Prefer light, warm, mildly spicy meals; avoid sweets & fried foods");
+      plan.herbs.push("Guggul (as advised)");
+    }
+
+    if (tags.skin) {
+      plan.diet.unshift("Hydrate well; include bitter greens, coriander, turmeric");
+      plan.herbs.push("Neem (skin support)");
+    }
+
+    if (tags.headache) {
+      plan.dailyRoutine.unshift("Hydrate; avoid skipping meals; 5–10 min forehead oiling (cool oil) if Pitta");
+    }
+
+    if (tags.fatigue) {
+      plan.dailyRoutine.unshift("Regular sleep-wake time; sunlight exposure in morning");
+    }
+
+    return plan;
   };
 
   const handleSendMessage = async () => {

@@ -24,8 +24,7 @@ const Index = () => {
   const handleDoshaAnalysisComplete = (dosha: string, recs: any) => {
     setUserDosha(dosha);
     setRecommendations(recs);
-    // Auto-switch to plans view after analysis
-    setTimeout(() => setActiveTab('plans'), 2000);
+    // Stay on chat so the user can review and export; no auto-switch
   };
 
   const renderActiveComponent = () => {
@@ -37,7 +36,7 @@ const Index = () => {
       case 'plans':
         return <PlansView userDosha={userDosha || 'Vata'} recommendations={recommendations} />;
       case 'progress':
-        return <ProgressTracker userDosha={userDosha || 'Vata'} />;
+        return <ProgressTracker userDosha={userDosha || 'Vata'} recommendations={recommendations} />;
       default:
         return <DashboardHome userDosha={userDosha || 'Vata'} />;
     }
@@ -67,7 +66,7 @@ const Index = () => {
   }
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-background transition-colors duration-500">
       {/* Sidebar Navigation */}
       <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
       
