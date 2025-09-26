@@ -3,14 +3,12 @@ import { Send, Bot, User, Download, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-<<<<<<< HEAD
+import { generateGeminiReply } from '@/lib/gemini';
 import { usePDFExport } from '@/hooks/usePDFExport';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-=======
-import { generateGeminiReply } from '@/lib/gemini';
->>>>>>> daa0be9 (feat: integrate Gemini API; add frontend + Flask fallbacks; fix models; improve chat error handling)
+import { useConversationMemory } from '@/hooks/useConversationMemory';
 
 interface Message {
   id: string;
@@ -19,27 +17,27 @@ interface Message {
   timestamp: Date;
 }
 
-const ChatInterface: React.FC = () => {
+interface ChatInterfaceProps {
+  onRecommendationsUpdate?: (recommendations: any) => void;
+}
+
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ onRecommendationsUpdate }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Namaste! 🙏 I\'m your AyurAgent assistant. I\'ll guide you through discovering your dosha and creating a personalized wellness plan. Let\'s start - how are you feeling today?',
+      text: 'Namaste, respected one! 🙏 I am your personal Ayurvedic consultant with 15+ years of experience. I will help you discover your dosha and create a wellness plan tailored just for you. Please share what health concerns or symptoms you would like guidance with today.',
       sender: 'agent',
       timestamp: new Date(),
     }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-<<<<<<< HEAD
-  const [currentPhase, setCurrentPhase] = useState<'intake' | 'analysis' | 'recommendation' | 'monitoring'>('intake');
-  const [userProfile, setUserProfile] = useState<any>({});
-  const [analysisResult, setAnalysisResult] = useState<{ dosha: string; recommendations: any } | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   
   const { exportToPDF, exportConsultationHistory } = usePDFExport();
   const { user } = useAuth();
   const { toast } = useToast();
-=======
->>>>>>> daa0be9 (feat: integrate Gemini API; add frontend + Flask fallbacks; fix models; improve chat error handling)
+  const { memory, addSymptom, addInsight, updateDoshaAnalysis, getContextForAI } = useConversationMemory();
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -51,181 +49,78 @@ const ChatInterface: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
-<<<<<<< HEAD
-  const doshaQuestions = [
-    "In simple words, what problem do you want help with? (e.g., poor sleep, stress, headache, digestion, skin issues)",
-    "What is your age range? (e.g., 18–25, 26–35, 36–45, 46+)",
-    "Which city and country do you live in?",
-    "Describe your daily routine in simple words (sleep time, work hours, activity level).",
-    "What do you usually eat in a day? (Breakfast, lunch, dinner, snacks, cold/hot drinks)",
-    "How do you feel during stress? (e.g., worry, anger, slow/low energy)",
-  ];
+  // Create new conversation on mount
+  useEffect(() => {
+    if (user && !conversationId) {
+      createNewConversation();
+    }
+  }, [user]);
 
-  const analyzeDoshaFromProfile = (profile: any): string => {
-    // Simplified dosha analysis based on symptoms and lifestyle
-    const symptoms = profile.symptoms?.toLowerCase() || '';
-    const lifestyle = profile.lifestyle?.toLowerCase() || '';
-    const stress = profile.stress?.toLowerCase() || '';
+  const createNewConversation = async () => {
+    if (!user) return;
 
-    let vataScore = 0;
-    let pittaScore = 0;
-    let kaphaScore = 0;
+    try {
+      const { data, error } = await supabase
+        .from('consultations')
+        .insert([{
+          user_id: user.id,
+          dosha_result: null,
+          recommendations: null,
+          status: 'in_progress'
+        }])
+        .select()
+        .single();
 
-    // Vata indicators
-    if (symptoms.includes('anxiety') || symptoms.includes('stress') || symptoms.includes('insomnia')) vataScore += 2;
-    if (lifestyle.includes('irregular') || lifestyle.includes('travel') || lifestyle.includes('busy')) vataScore += 1;
-    if (stress.includes('worry') || stress.includes('overthinking')) vataScore += 1;
-
-    // Pitta indicators
-    if (symptoms.includes('acidity') || symptoms.includes('anger') || symptoms.includes('inflammation')) pittaScore += 2;
-    if (lifestyle.includes('competitive') || lifestyle.includes('intense') || lifestyle.includes('work')) pittaScore += 1;
-    if (stress.includes('irritation') || stress.includes('criticism')) pittaScore += 1;
-
-    // Kapha indicators
-    if (symptoms.includes('fatigue') || symptoms.includes('weight') || symptoms.includes('congestion')) kaphaScore += 2;
-    if (lifestyle.includes('sedentary') || lifestyle.includes('slow') || lifestyle.includes('routine')) kaphaScore += 1;
-    if (stress.includes('withdrawal') || stress.includes('eating')) kaphaScore += 1;
-
-    if (vataScore >= pittaScore && vataScore >= kaphaScore) return 'Vata';
-    if (pittaScore >= kaphaScore) return 'Pitta';
-    return 'Kapha';
-  };
-
-  const generateRecommendations = (dosha: string, profile: any) => {
-    const base = {
-      Vata: {
-        dailyRoutine: [
-          "Wake up at a consistent time (before 7 AM if possible)",
-          "Warm oil self-massage (Abhyanga)",
-          "Gentle yoga or stretching",
-          "Eat warm, cooked meals at regular times",
-          "Evening wind-down: light reading/meditation"
-        ],
-        diet: [
-          "Favor warm, moist, slightly oily foods",
-          "Cooked grains (rice, oats), root vegetables",
-          "Sweet fruits; avoid cold/raw foods",
-          "Spiced milk or herbal tea at night"
-        ],
-        herbs: [
-          "Ashwagandha for stress balance",
-          "Brahmi for focus",
-          "Sesame oil for massage"
-        ]
-      },
-      Pitta: {
-        dailyRoutine: [
-          "Wake up during cool hours (around 5:30–6:30 AM)",
-          "Cooling pranayama (sheetali/sitali)",
-          "Moderate exercise; avoid peak heat",
-          "Prefer cooling, mildly spiced meals",
-          "Evening: calming activities in a cool space"
-        ],
-        diet: [
-          "Cool, fresh, and sweet/bitter foods",
-          "Coconut water, mint, leafy greens",
-          "Avoid very spicy, sour, fermented foods"
-        ],
-        herbs: [
-          "Amla for cooling and immunity",
-          "Aloe vera for heat/inflammation",
-          "Coconut oil for massage"
-        ]
-      },
-      Kapha: {
-        dailyRoutine: [
-          "Wake up early (around 5–6 AM)",
-          "Energizing exercise (brisk walk/jog)",
-          "Dry brushing before shower",
-          "Light, warm, mildly spicy meals",
-          "Stay active after sunset; avoid heavy dinners"
-        ],
-        diet: [
-          "Light, warm, gently spicy foods",
-          "Ginger tea; steamed veggies with spices",
-          "Avoid heavy, oily, and very sweet foods"
-        ],
-        herbs: [
-          "Triphala for digestion",
-          "Guggul for metabolism",
-          "Tulsi for respiratory health"
-        ]
+      if (error) {
+        console.error('Error creating conversation:', error);
+        return;
       }
-    } as const;
 
-    const text = (
-      [profile?.symptoms, profile?.lifestyle, profile?.diet, profile?.stress]
-        .filter(Boolean)
-        .join(' ') || ''
-    ).toLowerCase();
-
-    const tags = {
-      insomnia: /insomnia|sleep|sleepless|night/.test(text),
-      anxiety: /anxiety|anxious|stress|worry|tension|panic/.test(text),
-      digestion: /bloat|gas|constipation|indigestion|digestion|acidity|heartburn|reflux/.test(text),
-      acidity: /acidity|heartburn|reflux|ulcer/.test(text),
-      skin: /acne|pimple|rash|eczema|psoriasis|skin/.test(text),
-      weight: /weight|obese|overweight|fat|gain/.test(text),
-      headache: /headache|migraine|head pain/.test(text),
-      fatigue: /fatigue|tired|low energy|exhausted|weak/.test(text),
-    };
-
-    const plan = JSON.parse(JSON.stringify(base[dosha as keyof typeof base]));
-
-    if (tags.insomnia) {
-      plan.dailyRoutine.unshift(
-        "Sleep by 10 PM; avoid screens 1 hour before bed",
-        "Warm milk with nutmeg or ashwagandha at night"
-      );
-      plan.herbs.push("Jatamansi for better sleep");
+      setConversationId(data.id);
+    } catch (error) {
+      console.error('Error creating conversation:', error);
     }
-
-    if (tags.digestion) {
-      plan.dailyRoutine.unshift(
-        "Sip warm ginger water 15 mins before meals",
-        "Make lunch your largest meal"
-      );
-      plan.herbs.push("Triphala at night (as advised)");
-    }
-
-    if (tags.acidity) {
-      plan.diet.unshift("Favor cooling foods: cucumber, coconut water, mint");
-      plan.dailyRoutine.unshift("Avoid very spicy/fermented foods; never skip meals");
-      plan.herbs.push("Aloe vera juice in the morning (as advised)");
-    }
-
-    if (tags.anxiety) {
-      plan.dailyRoutine.unshift("10–15 min calming breathing twice daily (box breathing)");
-      plan.herbs.push("Ashwagandha for stress balance");
-    }
-
-    if (tags.weight) {
-      plan.dailyRoutine.unshift(
-        "30–40 min brisk walk/cardio in the morning",
-        "Avoid daytime naps"
-      );
-      plan.diet.unshift("Prefer light, warm, mildly spicy meals; avoid sweets & fried foods");
-      plan.herbs.push("Guggul (as advised)");
-    }
-
-    if (tags.skin) {
-      plan.diet.unshift("Hydrate well; include bitter greens, coriander, turmeric");
-      plan.herbs.push("Neem (skin support)");
-    }
-
-    if (tags.headache) {
-      plan.dailyRoutine.unshift("Hydrate; avoid skipping meals; 5–10 min forehead oiling (cool oil) if Pitta");
-    }
-
-    if (tags.fatigue) {
-      plan.dailyRoutine.unshift("Regular sleep-wake time; sunlight exposure in morning");
-    }
-
-    return plan;
   };
 
-=======
->>>>>>> daa0be9 (feat: integrate Gemini API; add frontend + Flask fallbacks; fix models; improve chat error handling)
+  const saveMessageToSupabase = async (message: Message) => {
+    if (!user || !conversationId) return;
+
+    try {
+      await supabase
+        .from('chat_messages')
+        .insert([{
+          consultation_id: conversationId,
+          message: message.text,
+          sender: message.sender,
+          timestamp: message.timestamp.toISOString()
+        }]);
+    } catch (error) {
+      console.error('Error saving message:', error);
+    }
+  };
+
+  const extractInsightsFromResponse = (response: string) => {
+    // Extract dosha mentions
+    const doshaMatches = response.match(/(Vata|Pitta|Kapha)/gi);
+    if (doshaMatches) {
+      const primaryDosha = doshaMatches[0];
+      updateDoshaAnalysis(primaryDosha);
+    }
+
+    // Extract symptoms mentioned
+    const symptomKeywords = ['headache', 'insomnia', 'anxiety', 'digestion', 'acidity', 'skin', 'fatigue', 'weight'];
+    const mentionedSymptoms = symptomKeywords.filter(symptom => 
+      response.toLowerCase().includes(symptom)
+    );
+    
+    mentionedSymptoms.forEach(symptom => addSymptom(symptom));
+
+    // Extract key recommendations as insights
+    if (response.includes('recommend') || response.includes('suggest')) {
+      addInsight(response.substring(0, 200) + '...');
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
 
@@ -240,48 +135,81 @@ const ChatInterface: React.FC = () => {
     setInputValue('');
     setIsTyping(true);
 
+    // Save user message
+    await saveMessageToSupabase(userMessage);
+
     try {
-      // Try frontend Gemini first (gemini.ts has a fallback API key now)
-      const reply = await generateGeminiReply(userMessage.text);
+      // Get conversation context from memory
+      const contextualPrompt = inputValue + getContextForAI();
+      
+      const reply = await generateGeminiReply(contextualPrompt);
+      
       const agentMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: reply,
         sender: 'agent',
         timestamp: new Date(),
       };
+      
       setMessages(prev => [...prev, agentMessage]);
+      
+      // Save agent message
+      await saveMessageToSupabase(agentMessage);
+      
+      // Extract insights and update memory
+      extractInsightsFromResponse(reply);
+      
+      // Parse recommendations if present
+      if (reply.includes('recommend') && onRecommendationsUpdate) {
+        const recommendations = parseRecommendationsFromResponse(reply);
+        onRecommendationsUpdate(recommendations);
+      }
+
     } catch (error: any) {
       console.error('Error generating reply:', error);
-      // If frontend failed, attempt backend as a last resort
-      try {
-        const response = await fetch('http://127.0.0.1:5000/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: userMessage.text }),
-        });
-        if (!response.ok) throw new Error('Backend not reachable');
-        const data = await response.json();
-        const agentMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          text: data.reply ?? 'Sorry, I could not generate a response.',
-          sender: 'agent',
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, agentMessage]);
-      } catch (fallbackErr) {
-        const msg = (error?.message?.includes('VITE_GEMINI_API_KEY') || error?.message?.includes('Missing'))
-          ? 'Gemini API key is not set. Add VITE_GEMINI_API_KEY in your .env (frontend) or set GEMINI_API_KEY and run the Flask server.'
-          : 'Sorry, I am having trouble connecting. Please try again later.';
-        const errorMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          text: msg,
-          sender: 'agent',
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, errorMessage]);
-      }
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: 'I apologize, respected one. I am having difficulty connecting at the moment. Please try again shortly.',
+        sender: 'agent',
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsTyping(false);
+    }
+  };
+
+  const parseRecommendationsFromResponse = (response: string) => {
+    // Simple parsing logic - can be enhanced
+    return {
+      dailyRoutine: response.includes('routine') ? [response.substring(0, 100)] : [],
+      diet: response.includes('eat') || response.includes('food') ? [response.substring(0, 100)] : [],
+      herbs: response.includes('herb') || response.includes('ashwagandha') ? [response.substring(0, 100)] : []
+    };
+  };
+
+  const handleExportChat = async () => {
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to export your consultation",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      await exportConsultationHistory(messages, memory?.dosha_analysis || 'Unknown');
+      toast({
+        title: "Export successful",
+        description: "Your consultation has been exported as PDF"
+      });
+    } catch (error) {
+      toast({
+        title: "Export failed",
+        description: "There was an error exporting your consultation",
+        variant: "destructive"
+      });
     }
   };
 
@@ -295,8 +223,22 @@ const ChatInterface: React.FC = () => {
   return (
     <Card className="h-full flex flex-col">
       {/* Chat Header */}
-      <div className="p-4 border-b border-border">
-        <h2 className="text-lg font-semibold">AI Ayurvedic Consultation</h2>
+      <div className="p-4 border-b border-border flex justify-between items-center">
+        <div>
+          <h2 className="text-lg font-semibold">AI Ayurvedic Consultation</h2>
+          {memory?.dosha_analysis && (
+            <p className="text-sm text-muted-foreground">Primary Dosha: {memory.dosha_analysis}</p>
+          )}
+        </div>
+        <Button 
+          onClick={handleExportChat}
+          variant="outline" 
+          size="sm"
+          className="flex items-center gap-2"
+        >
+          <Download size={16} />
+          Export PDF
+        </Button>
       </div>
 
       {/* Messages */}
@@ -308,7 +250,7 @@ const ChatInterface: React.FC = () => {
           >
             {message.sender === 'agent' && (
               <div className="flex-shrink-0">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center`}>
+                <div className="w-8 h-8 rounded-full gradient-healing flex items-center justify-center">
                   <Bot size={16} className="text-white" />
                 </div>
               </div>
@@ -366,7 +308,7 @@ const ChatInterface: React.FC = () => {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Share your symptoms, lifestyle, or ask a question..."
+            placeholder="Share your symptoms, lifestyle, or ask about Ayurvedic remedies..."
             className="flex-1"
             disabled={isTyping}
           />

@@ -1,8 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const apiKey = (import.meta.env.VITE_GEMINI_API_KEY as string | undefined) ??
-  // Fallback key provided by user for immediate functionality
-  "AIzaSyC2NZyha37rsd4sDn5Y-ZUQPTT4pIfWljE";
+const apiKey = "AIzaSyC2NZyha37rsd4sDn5Y-ZUQPTT4pIfWljE";
 
 // apiKey is guaranteed due to fallback above
 
@@ -33,7 +31,7 @@ export async function generateGeminiReply(
     model: options.model ?? defaultModelName,
     systemInstruction:
       options.systemInstruction ??
-      "You are a professional Ayurvedic doctor with 30+ years of experience. You have solved and treated thousands of patiends with various diseases. You are very knowledgeable about Ayurveda and you are able to provide very accurate and detailed answers to the questions asked by the user. Based on the user's symptoms, age, and location, predict the primary dosha (Vata, Pitta, Kapha) and provide a personalized recommendation in 1-2 sentences. Focus on daily routines, diet, and herbs. Keep it natural and helpful.",
+      "You are an expert Ayurvedic doctor with 15+ years of clinical practice, deeply versed in Ayurveda principles, dosha imbalances, herbal remedies, diet, and Dinacharya. With compassion, diagnose the user's primary dosha (Vata, Pitta, Kapha) based on symptoms, age, and location, and provide a concise, personalized recommendation (1-2 sentences) focusing on diet, daily routines, and Ayurvedic herbs. Address the user as 'respected one,' integrate prior conversation context, and offer practical, holistic advice to promote balance. Respond as a doctor, not a patient.",
   });
 
   const result = await model.generateContent(userMessage);
