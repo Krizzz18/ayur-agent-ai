@@ -3,7 +3,7 @@ import { Send, Bot, User, Download, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { generateGeminiReply } from '@/lib/gemini';
+import { generateGeminiReplyWithMemory } from '@/lib/geminiWithMemory';
 import { usePDFExport } from '@/hooks/usePDFExport';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -64,9 +64,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onRecommendationsUpdate }
         .from('consultations')
         .insert([{
           user_id: user.id,
-          dosha_result: null,
-          recommendations: null,
-          status: 'in_progress'
+          message_text: 'New consultation started',
+          message_type: 'system',
+          session_id: `session_${Date.now()}`,
+          recommendations: null
         }])
         .select()
         .single();
@@ -86,13 +87,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onRecommendationsUpdate }
     if (!user || !conversationId) return;
 
     try {
+      // Create a new consultation entry for this message using the existing schema
       await supabase
-        .from('chat_messages')
+        .from('consultations')
         .insert([{
-          consultation_id: conversationId,
-          message: message.text,
-          sender: message.sender,
-          timestamp: message.timestamp.toISOString()
+          user_id: user.id,
+          message_text: message.text,
+          message_type: message.sender,
+          session_id: conversationId,
+          agent_type: message.sender === 'agent' ? 'ayur_agent' : null
         }]);
     } catch (error) {
       console.error('Error saving message:', error);
@@ -140,9 +143,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onRecommendationsUpdate }
 
     try {
       // Get conversation context from memory
-      const contextualPrompt = inputValue + getContextForAI();
+      const contextualContext = getContextForAI();
       
-      const reply = await generateGeminiReply(contextualPrompt);
+      const reply = await generateGeminiReplyWithMemory(inputValue, contextualContext);
       
       const agentMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -198,13 +201,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onRecommendationsUpdate }
       return;
     }
 
-    try {
-      await exportConsultationHistory(messages, memory?.dosha_analysis || 'Unknown');
-      toast({
-        title: "Export successful",
-        description: "Your consultation has been exported as PDF"
-      });
-    } catch (error) {
+      try {
+        await exportConsultationHistory(messages, memory?.dosha_analysis);
+        toast({
+          title: "Export successful",
+          description: "Your consultation has been exported as PDF"
+        });
+      } catch (error) {
       toast({
         title: "Export failed",
         description: "There was an error exporting your consultation",

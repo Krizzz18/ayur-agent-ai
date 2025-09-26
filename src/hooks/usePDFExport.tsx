@@ -174,7 +174,7 @@ For more personalized recommendations, visit: https://ayuragent.app
     return content;
   };
 
-  const exportConsultationHistory = async (messages: any[]) => {
+  const exportConsultationHistory = async (messages: any[], dosha?: string) => {
     if (!messages || messages.length === 0) {
       throw new Error('No conversation history to export');
     }
@@ -187,6 +187,7 @@ For more personalized recommendations, visit: https://ayuragent.app
 
 Export Date: ${new Date().toLocaleString()}
 User: ${user?.email || 'Anonymous'}
+${dosha ? `Primary Dosha: ${dosha}` : ''}
 Total Messages: ${messages.length}
 
 ═══════════════════════════════════════════════════════════════

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
 interface ConversationMemory {
+  id: string;
   user_id: string;
   conversation_context: any;
   symptoms_history: string[];
@@ -18,7 +18,7 @@ export const useConversationMemory = () => {
   const [memory, setMemory] = useState<ConversationMemory | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load existing memory for user
+  // Load existing memory for user from localStorage as fallback
   useEffect(() => {
     if (user) {
       loadUserMemory();
@@ -29,44 +29,43 @@ export const useConversationMemory = () => {
     if (!user) return;
     
     try {
-      const { data, error } = await supabase
-        .from('conversation_memory')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (error && error.code !== 'PGRST116') { // Not found error is okay
-        console.error('Error loading memory:', error);
-        return;
-      }
-
-      if (data) {
-        setMemory(data);
+      // Try localStorage first as fallback until Supabase types are updated
+      const storedMemory = localStorage.getItem(`memory_${user.id}`);
+      
+      if (storedMemory) {
+        setMemory(JSON.parse(storedMemory));
       } else {
-        // Create initial memory structure
-        const initialMemory = {
+        // Create default memory
+        const defaultMemory: ConversationMemory = {
+          id: 'temp',
           user_id: user.id,
           conversation_context: {},
           symptoms_history: [],
           dosha_analysis: null,
           preferences: {},
-          key_insights: []
+          key_insights: [],
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         };
         
-        const { data: newMemory, error: createError } = await supabase
-          .from('conversation_memory')
-          .insert([initialMemory])
-          .select()
-          .single();
-
-        if (createError) {
-          console.error('Error creating memory:', createError);
-        } else {
-          setMemory(newMemory);
-        }
+        setMemory(defaultMemory);
+        localStorage.setItem(`memory_${user.id}`, JSON.stringify(defaultMemory));
       }
     } catch (error) {
       console.error('Error with memory:', error);
+      // Set default memory on error
+      const defaultMemory: ConversationMemory = {
+        id: 'temp',
+        user_id: user.id,
+        conversation_context: {},
+        symptoms_history: [],
+        dosha_analysis: null,
+        preferences: {},
+        key_insights: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      setMemory(defaultMemory);
     } finally {
       setIsLoading(false);
     }
@@ -76,19 +75,14 @@ export const useConversationMemory = () => {
     if (!user || !memory) return;
 
     try {
-      const { data, error } = await supabase
-        .from('conversation_memory')
-        .update(updates)
-        .eq('user_id', user.id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating memory:', error);
-        return;
-      }
-
-      setMemory(data);
+      // Update local memory immediately for better UX
+      const updatedMemory = { ...memory, ...updates, updated_at: new Date().toISOString() };
+      setMemory(updatedMemory);
+      
+      // Store in localStorage as fallback
+      localStorage.setItem(`memory_${user.id}`, JSON.stringify(updatedMemory));
+      
+      // TODO: Once Supabase types are updated, add database storage here
     } catch (error) {
       console.error('Error updating memory:', error);
     }

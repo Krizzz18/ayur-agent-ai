@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      chat_messages: {
+        Row: {
+          consultation_id: string
+          id: string
+          message: string
+          metadata: Json | null
+          sender: string
+          timestamp: string
+        }
+        Insert: {
+          consultation_id: string
+          id?: string
+          message: string
+          metadata?: Json | null
+          sender: string
+          timestamp?: string
+        }
+        Update: {
+          consultation_id?: string
+          id?: string
+          message?: string
+          metadata?: Json | null
+          sender?: string
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_consultation_id_fkey"
+            columns: ["consultation_id"]
+            isOneToOne: false
+            referencedRelation: "consultations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consultations: {
         Row: {
           agent_type: string | null
@@ -43,6 +78,42 @@ export type Database = {
           message_type?: string
           recommendations?: Json | null
           session_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      conversation_memory: {
+        Row: {
+          conversation_context: Json | null
+          created_at: string
+          dosha_analysis: string | null
+          id: string
+          key_insights: string[] | null
+          preferences: Json | null
+          symptoms_history: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          conversation_context?: Json | null
+          created_at?: string
+          dosha_analysis?: string | null
+          id?: string
+          key_insights?: string[] | null
+          preferences?: Json | null
+          symptoms_history?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          conversation_context?: Json | null
+          created_at?: string
+          dosha_analysis?: string | null
+          id?: string
+          key_insights?: string[] | null
+          preferences?: Json | null
+          symptoms_history?: string[] | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
