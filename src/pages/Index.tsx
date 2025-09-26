@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/card';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('home');
+<<<<<<< HEAD
   const [userDosha, setUserDosha] = useState<string>('');
   const [recommendations, setRecommendations] = useState<any>(null);
   const { user, loading } = useAuth();
@@ -26,19 +27,25 @@ const Index = () => {
     setRecommendations(recs);
     // Stay on chat so the user can review and export; no auto-switch
   };
+=======
+>>>>>>> daa0be9 (feat: integrate Gemini API; add frontend + Flask fallbacks; fix models; improve chat error handling)
 
   const renderActiveComponent = () => {
     switch (activeTab) {
       case 'home':
-        return <DashboardHome userDosha={userDosha || 'Vata'} />;
+        return <DashboardHome userDosha={'Vata'} />;
       case 'chat':
-        return <ChatInterface onDoshaAnalysisComplete={handleDoshaAnalysisComplete} />;
+        return <ChatInterface />;
       case 'plans':
-        return <PlansView userDosha={userDosha || 'Vata'} recommendations={recommendations} />;
+        return <PlansView userDosha={'Vata'} recommendations={null} />;
       case 'progress':
+<<<<<<< HEAD
         return <ProgressTracker userDosha={userDosha || 'Vata'} recommendations={recommendations} />;
+=======
+        return <ProgressTracker userDosha={'Vata'} />;
+>>>>>>> daa0be9 (feat: integrate Gemini API; add frontend + Flask fallbacks; fix models; improve chat error handling)
       default:
-        return <DashboardHome userDosha={userDosha || 'Vata'} />;
+        return <DashboardHome userDosha={'Vata'} />;
     }
   };
 

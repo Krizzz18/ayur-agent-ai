@@ -3,35 +3,34 @@ import { Send, Bot, User, Download, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+<<<<<<< HEAD
 import { usePDFExport } from '@/hooks/usePDFExport';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+=======
+import { generateGeminiReply } from '@/lib/gemini';
+>>>>>>> daa0be9 (feat: integrate Gemini API; add frontend + Flask fallbacks; fix models; improve chat error handling)
 
 interface Message {
   id: string;
   text: string;
   sender: 'user' | 'agent';
   timestamp: Date;
-  agentType?: 'intake' | 'analysis' | 'recommendation' | 'monitoring';
 }
 
-interface ChatInterfaceProps {
-  onDoshaAnalysisComplete?: (dosha: string, recommendations: any) => void;
-}
-
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ onDoshaAnalysisComplete }) => {
+const ChatInterface: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       text: 'Namaste! 🙏 I\'m your AyurAgent assistant. I\'ll guide you through discovering your dosha and creating a personalized wellness plan. Let\'s start - how are you feeling today?',
       sender: 'agent',
       timestamp: new Date(),
-      agentType: 'intake'
     }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+<<<<<<< HEAD
   const [currentPhase, setCurrentPhase] = useState<'intake' | 'analysis' | 'recommendation' | 'monitoring'>('intake');
   const [userProfile, setUserProfile] = useState<any>({});
   const [analysisResult, setAnalysisResult] = useState<{ dosha: string; recommendations: any } | null>(null);
@@ -39,6 +38,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onDoshaAnalysisComplete }
   const { exportToPDF, exportConsultationHistory } = usePDFExport();
   const { user } = useAuth();
   const { toast } = useToast();
+=======
+>>>>>>> daa0be9 (feat: integrate Gemini API; add frontend + Flask fallbacks; fix models; improve chat error handling)
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -50,6 +51,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onDoshaAnalysisComplete }
     scrollToBottom();
   }, [messages]);
 
+<<<<<<< HEAD
   const doshaQuestions = [
     "In simple words, what problem do you want help with? (e.g., poor sleep, stress, headache, digestion, skin issues)",
     "What is your age range? (e.g., 18–25, 26–35, 36–45, 46+)",
@@ -222,6 +224,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onDoshaAnalysisComplete }
     return plan;
   };
 
+=======
+>>>>>>> daa0be9 (feat: integrate Gemini API; add frontend + Flask fallbacks; fix models; improve chat error handling)
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
 
@@ -236,92 +240,49 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onDoshaAnalysisComplete }
     setInputValue('');
     setIsTyping(true);
 
-    // Update user profile based on message context
-    const messageText = inputValue.toLowerCase();
-    const newProfile = { ...userProfile };
-
-    if (messages.length === 1) {
-      newProfile.symptoms = inputValue;
-    } else if (messages.length === 3) {
-      newProfile.age = inputValue;
-    } else if (messages.length === 5) {
-      newProfile.location = inputValue;
-    } else if (messages.length === 7) {
-      newProfile.lifestyle = inputValue;
-    } else if (messages.length === 9) {
-      newProfile.diet = inputValue;
-    } else if (messages.length === 11) {
-      newProfile.stress = inputValue;
-    }
-
-    setUserProfile(newProfile);
-
-    // Simulate agent response delay
-    setTimeout(() => {
-      let agentResponse = '';
-      let agentType: 'intake' | 'analysis' | 'recommendation' | 'monitoring' = 'intake';
-
-      if (messages.length < 11) {
-        // Intake phase - ask next question
-        const questionIndex = Math.floor(messages.length / 2);
-        agentResponse = doshaQuestions[questionIndex] || "Thank you for sharing! Let me analyze your information.";
-        agentType = 'intake';
-      } else if (messages.length === 11) {
-        // Analysis phase
-        setCurrentPhase('analysis');
-        agentType = 'analysis';
-        agentResponse = "Perfect! I'm now analyzing your responses to determine your primary dosha constitution. This may take a moment... 🧘‍♀️";
-        
-        // Trigger dosha analysis after a delay
-        setTimeout(() => {
-          const primaryDosha = analyzeDoshaFromProfile(newProfile);
-          const recommendations = generateRecommendations(primaryDosha, newProfile);
-          
-          const analysisMessage: Message = {
-            id: (Date.now() + 1).toString(),
-            text: `Based on your responses, your primary dosha is **${primaryDosha}**! This means you have a ${primaryDosha.toLowerCase()} constitution. Let me create your personalized wellness plan...`,
-            sender: 'agent',
-            timestamp: new Date(),
-            agentType: 'analysis'
-          };
-
-          const recommendationMessage: Message = {
-            id: (Date.now() + 2).toString(),
-            text: `Here's your personalized ${primaryDosha} balancing plan:\n\n**Daily Routine:**\n${recommendations.dailyRoutine.map(item => `• ${item}`).join('\n')}\n\n**Dietary Guidelines:**\n${recommendations.diet.map(item => `• ${item}`).join('\n')}\n\n**Recommended Herbs:**\n${recommendations.herbs.map(item => `• ${item}`).join('\n')}\n\nWould you like me to create a detailed weekly schedule for you?`,
-            sender: 'agent',
-            timestamp: new Date(),
-            agentType: 'recommendation'
-          };
-
-          setMessages(prev => [...prev, analysisMessage, recommendationMessage]);
-          setCurrentPhase('recommendation');
-          
-          // Notify parent component
-          if (onDoshaAnalysisComplete) {
-            onDoshaAnalysisComplete(primaryDosha, recommendations);
-          }
-        }, 3000);
-      } else {
-        // Monitoring phase
-        agentType = 'monitoring';
-        agentResponse = "I'll continue to monitor your progress and provide personalized guidance. How are you feeling with your current plan?";
-        setCurrentPhase('monitoring');
-      }
-
-      if (agentResponse) {
+    try {
+      // Try frontend Gemini first (gemini.ts has a fallback API key now)
+      const reply = await generateGeminiReply(userMessage.text);
+      const agentMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: reply,
+        sender: 'agent',
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, agentMessage]);
+    } catch (error: any) {
+      console.error('Error generating reply:', error);
+      // If frontend failed, attempt backend as a last resort
+      try {
+        const response = await fetch('http://127.0.0.1:5000/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: userMessage.text }),
+        });
+        if (!response.ok) throw new Error('Backend not reachable');
+        const data = await response.json();
         const agentMessage: Message = {
-          id: (Date.now() + 1000).toString(),
-          text: agentResponse,
+          id: (Date.now() + 1).toString(),
+          text: data.reply ?? 'Sorry, I could not generate a response.',
           sender: 'agent',
           timestamp: new Date(),
-          agentType
         };
-
         setMessages(prev => [...prev, agentMessage]);
+      } catch (fallbackErr) {
+        const msg = (error?.message?.includes('VITE_GEMINI_API_KEY') || error?.message?.includes('Missing'))
+          ? 'Gemini API key is not set. Add VITE_GEMINI_API_KEY in your .env (frontend) or set GEMINI_API_KEY and run the Flask server.'
+          : 'Sorry, I am having trouble connecting. Please try again later.';
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: msg,
+          sender: 'agent',
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, errorMessage]);
       }
-      
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -331,34 +292,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onDoshaAnalysisComplete }
     }
   };
 
-  const getAgentName = (agentType?: string) => {
-    switch (agentType) {
-      case 'intake': return 'Intake Agent';
-      case 'analysis': return 'Analysis Agent';
-      case 'recommendation': return 'Recommendation Agent';
-      case 'monitoring': return 'Monitoring Agent';
-      default: return 'AyurAgent';
-    }
-  };
-
-  const getAgentVariant = (agentType?: string) => {
-    switch (agentType) {
-      case 'intake': return 'vata';
-      case 'analysis': return 'pitta';
-      case 'recommendation': return 'kapha';
-      case 'monitoring': return 'healing';
-      default: return 'default';
-    }
-  };
-
   return (
     <Card className="h-full flex flex-col">
       {/* Chat Header */}
       <div className="p-4 border-b border-border">
         <h2 className="text-lg font-semibold">AI Ayurvedic Consultation</h2>
-        <p className="text-sm text-muted-foreground">
-          Phase: {currentPhase.charAt(0).toUpperCase() + currentPhase.slice(1)}
-        </p>
       </div>
 
       {/* Messages */}
@@ -370,18 +308,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onDoshaAnalysisComplete }
           >
             {message.sender === 'agent' && (
               <div className="flex-shrink-0">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getAgentVariant(message.agentType)}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center`}>
                   <Bot size={16} className="text-white" />
                 </div>
               </div>
             )}
             
             <div className={`max-w-[70%] ${message.sender === 'user' ? 'order-1' : ''}`}>
-              {message.sender === 'agent' && (
-                <p className="text-xs text-muted-foreground mb-1">
-                  {getAgentName(message.agentType)}
-                </p>
-              )}
               <div
                 className={`p-3 rounded-lg ${
                   message.sender === 'user'

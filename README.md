@@ -69,6 +69,18 @@ npm run dev
 # Access application at http://localhost:8080
 ```
 
+### Environment Variables
+
+Create a `.env` file in the `ayur-agent-ai` folder root and add:
+
+```bash
+# Local API (optional)
+VITE_API_URL=http://127.0.0.1:5000
+
+# Google Gemini API Key (you will set this)
+VITE_GEMINI_API_KEY=YOUR_GEMINI_API_KEY_HERE
+```
+
 ## 📊 Demo & Testing
 
 ### Sample User Journey
