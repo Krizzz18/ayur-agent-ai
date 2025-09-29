@@ -1,6 +1,8 @@
 import React from 'react';
 import { MessageCircle, Home, User, TrendingUp, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import ThemeToggle from '@/components/ThemeToggle';
+import { useAuth } from '@/hooks/useAuth';
 import lotusIcon from '@/assets/lotus-icon.png';
 
 interface NavigationProps {
@@ -9,6 +11,7 @@ interface NavigationProps {
 }
 
 const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
+  const { user } = useAuth();
   const navItems = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'chat', label: 'AI Chat', icon: MessageCircle },
@@ -18,13 +21,32 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
 
   return (
     <nav className="bg-card border-r border-border h-full w-64 p-4 flex flex-col">
-      {/* Logo */}
-      <div className="flex items-center gap-3 mb-8 pb-4 border-b border-border">
-        <img src={lotusIcon} alt="AyurAgent" className="w-10 h-10 lotus-bloom" />
-        <div>
-          <h1 className="text-xl font-bold text-foreground">AyurAgent</h1>
-          <p className="text-sm text-muted-foreground">AI Ayurvedic Wellness</p>
+      {/* Logo and Theme Toggle */}
+      <div className="mb-8 pb-4 border-b border-border">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <img src={lotusIcon} alt="AyurAgent" className="w-10 h-10 lotus-bloom" />
+            <div>
+              <h1 className="text-xl font-bold text-foreground">AyurAgent</h1>
+              <p className="text-sm text-muted-foreground">AI Ayurvedic Wellness</p>
+            </div>
+          </div>
+          <ThemeToggle />
         </div>
+        {!user && (
+          <div className="bg-accent/50 border border-accent-foreground/20 rounded-lg p-3 mt-3">
+            <p className="text-xs text-muted-foreground text-center">
+              🌟 Exploring as Guest
+            </p>
+            <Button 
+              size="sm" 
+              className="w-full mt-2" 
+              onClick={() => window.location.href = '/auth'}
+            >
+              Sign Up Free
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Navigation Items */}

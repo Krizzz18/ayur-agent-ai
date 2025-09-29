@@ -14,12 +14,7 @@ const Index = () => {
   const [recommendations, setRecommendations] = useState<any>(null);
   const { user, loading } = useAuth();
 
-  useEffect(() => {
-    // Redirect to landing page if not authenticated
-    if (!loading && !user) {
-      window.location.href = '/';
-    }
-  }, [user, loading]);
+  // Allow guest access - no redirect needed
 
   const handleRecommendationsUpdate = (recs: any) => {
     setRecommendations(recs);
@@ -54,18 +49,7 @@ const Index = () => {
     );
   }
 
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-background">
-        <Card className="p-8 text-center">
-          <p className="text-muted-foreground mb-4">Please sign in to access your wellness dashboard</p>
-          <Button onClick={() => window.location.href = '/auth'}>
-            Sign In
-          </Button>
-        </Card>
-      </div>
-    );
-  }
+  // Allow both authenticated and guest users to access the dashboard
 
   return (
     <div className="flex h-screen bg-background transition-colors duration-500">
