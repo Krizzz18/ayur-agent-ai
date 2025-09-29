@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/useAuth';
+import ThemeToggle from '@/components/ThemeToggle';
 import { Leaf, Mail, Lock, User, Phone, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -159,13 +160,14 @@ const AuthPage = () => {
 
       <Card className="w-full max-w-md shadow-lotus backdrop-blur-sm bg-card/95 relative">
         <CardHeader className="text-center space-y-4">
-          <Link to="/" className="inline-block">
-            <div className="flex justify-center">
-              <div className="w-16 h-16 bg-gradient-healing rounded-2xl shadow-lotus flex items-center justify-center hover:scale-105 transition-ayur">
-                <Leaf className="w-8 h-8 text-white" />
+          <div className="flex justify-between items-start mb-4">
+            <Link to="/" className="inline-block">
+              <div className="w-12 h-12 bg-gradient-healing rounded-xl shadow-lotus flex items-center justify-center hover:scale-105 transition-ayur">
+                <Leaf className="w-6 h-6 text-white" />
               </div>
-            </div>
-          </Link>
+            </Link>
+            <ThemeToggle />
+          </div>
           <div>
             <CardTitle className="text-2xl bg-gradient-healing bg-clip-text text-transparent">AyurAgent</CardTitle>
             <CardDescription>Your journey to wellness starts here</CardDescription>
