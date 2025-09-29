@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Sparkles, Users, Shield, Zap, ArrowRight, Heart, Leaf, Sun } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Link } from 'react-router-dom';
+import ThemeToggle from './ThemeToggle';
 
 const LandingPage = () => {
   const { user } = useAuth();
@@ -16,6 +17,11 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-card to-background">
+      {/* Theme Toggle - Fixed Position */}
+      <div className="fixed top-4 right-4 z-50">
+        <ThemeToggle />
+      </div>
+      
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         {/* Animated Background Elements */}
