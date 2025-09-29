@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -200,29 +201,30 @@ const PlansView: React.FC<PlansViewProps> = ({
                   <div className="px-6 pb-6 border-t border-border">
                     <div className="space-y-3 mt-4">
                       {plan.items.map((item, index) => {
-                        const isCompleted = index < plan.completed;
+                        const [itemCompleted, setItemCompleted] = React.useState(index < plan.completed);
                         return (
-                          <div key={index} className="flex items-start gap-3">
-                            {isCompleted ? (
-                              <CheckCircle2 size={16} className="text-secondary mt-0.5 flex-shrink-0" />
-                            ) : (
-                              <Circle size={16} className="text-muted-foreground mt-0.5 flex-shrink-0" />
-                            )}
-                            <span className={`text-sm ${isCompleted ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
+                          <div key={index} className="flex items-start gap-3 group">
+                            <RadioGroup 
+                              value={itemCompleted ? 'completed' : 'pending'}
+                              className="flex items-center"
+                            >
+                              <RadioGroupItem 
+                                value="completed" 
+                                id={`${plan.title}-${index}`}
+                                onClick={() => setItemCompleted(!itemCompleted)}
+                                className="cursor-pointer"
+                              />
+                            </RadioGroup>
+                            <label 
+                              htmlFor={`${plan.title}-${index}`}
+                              className={`text-sm cursor-pointer ${itemCompleted ? 'text-muted-foreground line-through' : 'text-foreground'}`}
+                            >
                               {item}
-                            </span>
+                            </label>
                           </div>
                         );
                       })}
                     </div>
-                    
-                    <Button 
-                      variant={plan.variant as any}
-                      size="sm" 
-                      className="mt-4 w-full"
-                    >
-                      Update Progress
-                    </Button>
                   </div>
                 </CollapsibleContent>
               </Collapsible>

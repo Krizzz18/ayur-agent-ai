@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageCircle, Home, User, TrendingUp, BookOpen } from 'lucide-react';
+import { MessageCircle, Home, User, TrendingUp, BookOpen, ChefHat, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ThemeToggle from '@/components/ThemeToggle';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,9 +13,11 @@ interface NavigationProps {
 const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
   const { user } = useAuth();
   const navItems = [
-    { id: 'home', label: 'Home', icon: Home },
-    { id: 'chat', label: 'AI Chat', icon: MessageCircle },
-    { id: 'plans', label: 'My Plans', icon: BookOpen },
+    { id: 'home', label: 'Dashboard', icon: Home },
+    { id: 'patients', label: 'Patients', icon: Users },
+    { id: 'diet-chart', label: 'Diet Charts', icon: ChefHat },
+    { id: 'chat', label: 'AI Consultant', icon: MessageCircle },
+    { id: 'plans', label: 'Wellness Plans', icon: BookOpen },
     { id: 'progress', label: 'Progress', icon: TrendingUp },
   ];
 

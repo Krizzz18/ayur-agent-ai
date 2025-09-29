@@ -378,7 +378,28 @@ const AuthPage = () => {
             </div>
           </div>
           
-          <div className="text-center">
+          {/* Guest Mode - Prominent for Judges */}
+          <div className="relative my-4">
+            <Separator />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="px-2 text-sm text-muted-foreground bg-card">For SIH Judges</span>
+            </div>
+          </div>
+          
+          <Button
+            variant="outline"
+            className="w-full border-2 border-primary/50 hover:bg-primary/10 hover:border-primary transition-ayur text-lg py-6"
+            onClick={() => navigate('/dashboard?guest=true')}
+          >
+            <User className="w-5 h-5 mr-2" />
+            Continue as Guest (View Demo)
+          </Button>
+          
+          <p className="text-xs text-center text-muted-foreground mt-2">
+            Instant access to explore all features without signup
+          </p>
+          
+          <div className="text-center mt-4">
             <Link to="/" className="text-sm text-muted-foreground hover:text-primary transition-ayur">
               Back to Home
             </Link>

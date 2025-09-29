@@ -4,6 +4,8 @@ import DashboardHome from '@/components/DashboardHome';
 import ChatInterface from '@/components/ChatInterface';
 import PlansView from '@/components/PlansView';
 import ProgressTracker from '@/components/ProgressTracker';
+import DietChartModule from '@/components/DietChartModule';
+import PatientManagement from '@/components/PatientManagement';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -28,6 +30,10 @@ const Index = () => {
     switch (activeTab) {
       case 'home':
         return <DashboardHome userDosha={userDosha || 'Vata'} />;
+      case 'patients':
+        return <PatientManagement />;
+      case 'diet-chart':
+        return <DietChartModule />;
       case 'chat':
         return <ChatInterface onRecommendationsUpdate={handleRecommendationsUpdate} />;
       case 'plans':

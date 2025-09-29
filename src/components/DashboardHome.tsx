@@ -168,55 +168,86 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          {todayTasks.map((task) => (
-            <Card 
-              key={task.id} 
-              className={`p-4 transition-ayur cursor-pointer ${
-                task.completed ? 'bg-secondary/20 border-secondary' : 'hover:shadow-gentle'
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 mt-0.5 ${
-                  task.completed 
-                    ? 'bg-secondary border-secondary' 
-                    : 'border-muted-foreground'
-                }`}>
-                  {task.completed && (
-                    <div className="w-full h-full rounded-full bg-secondary"></div>
-                  )}
-                </div>
-                <div>
-                  <p className={`text-sm font-medium ${
-                    task.completed ? 'text-muted-foreground line-through' : 'text-foreground'
+          {todayTasks.map((task) => {
+            const [taskState, setTaskState] = React.useState(task.completed);
+            
+            return (
+              <Card 
+                key={task.id} 
+                className={`p-4 transition-ayur cursor-pointer ${
+                  taskState ? 'bg-secondary/20 border-secondary' : 'hover:shadow-gentle'
+                }`}
+                onClick={() => setTaskState(!taskState)}
+              >
+                <div className="flex items-start gap-3">
+                  <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 mt-0.5 ${
+                    taskState 
+                      ? 'bg-secondary border-secondary' 
+                      : 'border-muted-foreground'
                   }`}>
-                    {task.task}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{task.time}</p>
+                    {taskState && (
+                      <div className="w-full h-full rounded-full bg-secondary"></div>
+                    )}
+                  </div>
+                  <div>
+                    <p className={`text-sm font-medium ${
+                      taskState ? 'text-muted-foreground line-through' : 'text-foreground'
+                    }`}>
+                      {task.task}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{task.time}</p>
+                  </div>
                 </div>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
       </Card>
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Button variant="vata" className="h-20 flex-col gap-2">
+        <Button 
+          variant="vata" 
+          className="h-20 flex-col gap-2 hover:scale-105 transition-ayur"
+          onClick={() => {
+            const audio = new Audio();
+            audio.play().catch(() => {});
+            alert('Morning Routine: Start your day with oil massage (Abhyanga), followed by warm water with lemon. Practice 15 minutes of pranayama.');
+          }}
+        >
           <Sunrise size={24} />
           <span>Morning Routine</span>
         </Button>
         
-        <Button variant="pitta" className="h-20 flex-col gap-2">
+        <Button 
+          variant="pitta" 
+          className="h-20 flex-col gap-2 hover:scale-105 transition-ayur"
+          onClick={() => {
+            alert('Hydration Tracker: Drink 2-3 liters of water daily. Aim for 8-10 glasses. Track your intake throughout the day.');
+          }}
+        >
           <Droplets size={24} />
           <span>Hydration Tracker</span>
         </Button>
         
-        <Button variant="kapha" className="h-20 flex-col gap-2">
+        <Button 
+          variant="kapha" 
+          className="h-20 flex-col gap-2 hover:scale-105 transition-ayur"
+          onClick={() => {
+            alert('Herb Reminder: Take Ashwagandha (500mg) twice daily, Triphala before bed, and Turmeric milk in the evening.');
+          }}
+        >
           <Leaf size={24} />
           <span>Herb Reminder</span>
         </Button>
         
-        <Button variant="healing" className="h-20 flex-col gap-2">
+        <Button 
+          variant="healing" 
+          className="h-20 flex-col gap-2 hover:scale-105 transition-ayur"
+          onClick={() => {
+            alert('Wellness Check: How are you feeling today? Make sure to log your symptoms, energy levels, and any changes in your routine.');
+          }}
+        >
           <Heart size={24} />
           <span>Wellness Check</span>
         </Button>

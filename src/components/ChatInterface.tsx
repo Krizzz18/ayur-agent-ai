@@ -25,11 +25,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onRecommendationsUpdate }
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Namaste, respected one! 🙏 I am your personal Ayurvedic consultant with 15+ years of experience. I will help you discover your dosha and create a wellness plan tailored just for you. Please share what health concerns or symptoms you would like guidance with today.',
+      text: 'Namaste, respected one! 🙏 I am your Ayurvedic consultant with 15+ years of experience. I will ask you a few questions to understand your health better and then provide personalized Ayurvedic recommendations.\n\nLet me start by asking: What is your age?',
       sender: 'agent',
       timestamp: new Date(),
     }
   ]);
+  const [questionSequence, setQuestionSequence] = useState(0);
+  const [userResponses, setUserResponses] = useState<Record<string, string>>({});
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -124,6 +126,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onRecommendationsUpdate }
     }
   };
 
+  const questions = [
+    { key: 'age', question: 'What is your age?' },
+    { key: 'gender', question: 'What is your gender? (Male/Female/Other)' },
+    { key: 'location', question: 'Which city/location do you live in?' },
+    { key: 'diet', question: 'What are your dietary preferences? (Vegetarian/Non-Vegetarian/Vegan)' },
+    { key: 'symptoms', question: 'What health issues or symptoms are you experiencing? Please describe in detail.' },
+    { key: 'sleep', question: 'How many hours do you sleep per day?' },
+    { key: 'exercise', question: 'How often do you exercise? (Daily/Weekly/Rarely/Never)' },
+    { key: 'stress', question: 'Do you experience stress or anxiety? If yes, please describe.' },
+  ];
+
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
 
@@ -135,6 +148,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onRecommendationsUpdate }
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = inputValue;
     setInputValue('');
     setIsTyping(true);
 
@@ -142,31 +156,80 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onRecommendationsUpdate }
     await saveMessageToSupabase(userMessage);
 
     try {
-      // Get conversation context from memory
-      const contextualContext = getContextForAI();
-      
-      const reply = await generateGeminiReplyWithMemory(inputValue, contextualContext);
+      // Store user response
+      if (questionSequence < questions.length) {
+        const currentQuestion = questions[questionSequence];
+        setUserResponses(prev => ({ ...prev, [currentQuestion.key]: currentInput }));
+      }
+
+      let agentReply = '';
+
+      // If still collecting info, ask next question
+      if (questionSequence < questions.length - 1) {
+        const nextQuestion = questions[questionSequence + 1];
+        agentReply = `Thank you for sharing. ${nextQuestion.question}`;
+        setQuestionSequence(prev => prev + 1);
+      } else if (questionSequence === questions.length - 1) {
+        // Final question answered, now generate Ayurvedic recommendations
+        setQuestionSequence(prev => prev + 1);
+        
+        // Build comprehensive context
+        const allResponses = { ...userResponses, [questions[questionSequence].key]: currentInput };
+        const contextForAI = `
+Patient Information:
+- Age: ${allResponses.age || 'Not provided'}
+- Gender: ${allResponses.gender || 'Not provided'}
+- Location: ${allResponses.location || 'Not provided'}
+- Dietary Preferences: ${allResponses.diet || 'Not provided'}
+- Symptoms/Health Issues: ${allResponses.symptoms || 'Not provided'}
+- Sleep: ${allResponses.sleep || 'Not provided'} hours
+- Exercise: ${allResponses.exercise || 'Not provided'}
+- Stress/Anxiety: ${allResponses.stress || 'Not provided'}
+
+Based on this information, provide comprehensive Ayurvedic recommendations including:
+1. Primary Dosha analysis (Vata, Pitta, or Kapha)
+2. Specific diet plan with food items to include and avoid
+3. Herbal medicines/supplements (with dosage if applicable)
+4. Lifestyle modifications (daily routine, sleep schedule)
+5. Yoga or exercise recommendations
+6. Any other Ayurvedic therapies that may help
+
+Format the response clearly and professionally.`;
+
+        agentReply = await generateGeminiReplyWithMemory(currentInput, contextForAI);
+        
+        // Extract insights
+        extractInsightsFromResponse(agentReply);
+        
+        // Parse recommendations
+        if (onRecommendationsUpdate) {
+          const recommendations = parseRecommendationsFromResponse(agentReply);
+          onRecommendationsUpdate(recommendations);
+        }
+      } else {
+        // After recommendations, allow free-form conversation
+        const contextualContext = getContextForAI();
+        const previousContext = Object.entries(userResponses)
+          .map(([key, value]) => `${key}: ${value}`)
+          .join('\n');
+        
+        agentReply = await generateGeminiReplyWithMemory(
+          currentInput, 
+          `${previousContext}\n\n${contextualContext}`
+        );
+        
+        extractInsightsFromResponse(agentReply);
+      }
       
       const agentMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: reply,
+        text: agentReply,
         sender: 'agent',
         timestamp: new Date(),
       };
       
       setMessages(prev => [...prev, agentMessage]);
-      
-      // Save agent message
       await saveMessageToSupabase(agentMessage);
-      
-      // Extract insights and update memory
-      extractInsightsFromResponse(reply);
-      
-      // Parse recommendations if present
-      if (reply.includes('recommend') && onRecommendationsUpdate) {
-        const recommendations = parseRecommendationsFromResponse(reply);
-        onRecommendationsUpdate(recommendations);
-      }
 
     } catch (error: any) {
       console.error('Error generating reply:', error);
