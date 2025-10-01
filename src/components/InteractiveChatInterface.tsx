@@ -194,10 +194,10 @@ const InteractiveChatInterface: React.FC<ChatInterfaceProps> = ({ onRecommendati
       displayText = `Stress level: ${value}/10 ${value <= 3 ? '😌' : value <= 6 ? '😐' : '😰'}`;
     } else if (step.type === 'emoji-select') {
       const option = step.options?.find((opt: any) => opt.value === value);
-      displayText = `${option?.emoji} ${option?.label}`;
+      displayText = `${option?.emoji} ${(option as any)?.label || (option as any)?.title}`;
     } else if (step.type === 'constitution-cards') {
       const option = step.options?.find((opt: any) => opt.value === value);
-      displayText = `${option?.emoji} ${option?.title}`;
+      displayText = `${option?.emoji} ${(option as any)?.title || (option as any)?.label}`;
     } else if (step.type === 'multi-emoji-select') {
       const selectedOptions = step.options?.filter((opt: any) => value.includes(opt.value));
       displayText = selectedOptions?.map((opt: any) => `${opt.emoji} ${opt.label}`).join(', ') || 'None selected';

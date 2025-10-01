@@ -395,7 +395,7 @@ const DoctorDashboard = () => {
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span>Needs Attention (<70%)</span>
+                  <span>Needs Attention (&lt;70%)</span>
                   <div className="flex items-center gap-2">
                     <AlertCircle className="w-4 h-4 text-red-500" />
                     <span>{patients.filter(p => p.compliance < 70).length} patients</span>
