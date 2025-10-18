@@ -6,6 +6,13 @@ import PlansView from '@/components/PlansView';
 import ProgressTracker from '@/components/ProgressTracker';
 import DietChartModule from '@/components/DietChartModule';
 import PatientManagement from '@/components/PatientManagement';
+import EnhancedFoodDatabase from '@/components/EnhancedFoodDatabase';
+import DoctorDashboard from '@/components/DoctorDashboard';
+import AppointmentScheduler from '@/components/AppointmentScheduler';
+import PrakritiQuizComponent from '@/components/PrakritiquizComponent';
+import AgniTracker from '@/components/AgniTracker';
+import InteractiveChatInterface from '@/components/InteractiveChatInterface';
+import EnhancedProgressTracker from '@/components/EnhancedProgressTracker';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -35,11 +42,21 @@ const Index = () => {
       case 'diet-chart':
         return <DietChartModule />;
       case 'chat':
-        return <ChatInterface onRecommendationsUpdate={handleRecommendationsUpdate} />;
+        return <InteractiveChatInterface onRecommendationsUpdate={handleRecommendationsUpdate} />;
       case 'plans':
         return <PlansView userDosha={userDosha || 'Vata'} recommendations={recommendations} />;
       case 'progress':
-        return <ProgressTracker userDosha={userDosha || 'Vata'} recommendations={recommendations} />;
+        return <EnhancedProgressTracker userDosha={userDosha || 'Vata'} recommendations={recommendations} />;
+      case 'food-database':
+        return <EnhancedFoodDatabase />;
+      case 'doctor-panel':
+        return <DoctorDashboard />;
+      case 'appointments':
+        return <AppointmentScheduler />;
+      case 'prakriti-quiz':
+        return <PrakritiQuizComponent />;
+      case 'agni-tracker':
+        return <AgniTracker />;
       default:
         return <DashboardHome userDosha={userDosha || 'Vata'} />;
     }
