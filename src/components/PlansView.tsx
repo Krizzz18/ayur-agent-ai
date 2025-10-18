@@ -149,7 +149,21 @@ const PlansView: React.FC<PlansViewProps> = ({
             Personalized Ayurvedic recommendations for optimal health
           </p>
         </div>
-        <Button variant="outline" className="gap-2">
+        <Button variant="outline" className="gap-2" onClick={async () => {
+          const { exportDietChartToPDF } = await import('@/lib/pdfExport');
+          const plans = [
+            { id: '1', mealTime: 'Daily Routine', foods: currentRecommendations.dailyRoutine.map((item: string, i: number) => ({
+              id: `routine-${i}`, name: item, category: 'Routine', calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, dosha: userDosha, serving: '1x'
+            })), completed: false },
+            { id: '2', mealTime: 'Dietary Guidelines', foods: currentRecommendations.diet.map((item: string, i: number) => ({
+              id: `diet-${i}`, name: item, category: 'Diet', calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, dosha: userDosha, serving: '1x'
+            })), completed: false },
+            { id: '3', mealTime: 'Herbal Medicine', foods: currentRecommendations.herbs.map((item: string, i: number) => ({
+              id: `herb-${i}`, name: item, category: 'Herbs', calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, dosha: userDosha, serving: '1x'
+            })), completed: false }
+          ];
+          exportDietChartToPDF(plans, 'Wellness Plan');
+        }}>
           <Download size={16} />
           Export Plans
         </Button>

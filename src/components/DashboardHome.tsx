@@ -125,7 +125,9 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({
             {weatherAdvice.advice}
           </p>
           
-          <Button variant="outline" size="sm" className="mt-4 w-full">
+          <Button variant="outline" size="sm" className="mt-4 w-full" onClick={() => {
+            alert('Seasonal Ayurvedic Tips:\n\n• Summer: Stay cool with coconut water and mint\n• Monsoon: Boost immunity with turmeric and ginger\n• Winter: Keep warm with ghee and sesame oil\n• Spring: Detoxify with bitter greens and triphala');
+          }}>
             View Seasonal Tips
           </Button>
         </Card>
