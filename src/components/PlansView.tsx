@@ -213,7 +213,7 @@ const PlansView: React.FC<PlansViewProps> = ({
                 
                 <CollapsibleContent>
                   <div className="px-6 pb-6 border-t border-border">
-                    <div className="space-y-3 mt-4">
+                  <div className="space-y-3 mt-4">
                       {plan.items.map((item, index) => {
                         const [itemCompleted, setItemCompleted] = React.useState(index < plan.completed);
                         return (
@@ -224,16 +224,16 @@ const PlansView: React.FC<PlansViewProps> = ({
                             >
                               <RadioGroupItem 
                                 value="completed" 
-                                id={`${plan.title}-${index}`}
+                                id={`${plan.id}-${index}`}
                                 onClick={() => setItemCompleted(!itemCompleted)}
                                 className="cursor-pointer"
                               />
                             </RadioGroup>
                             <label 
-                              htmlFor={`${plan.title}-${index}`}
+                              htmlFor={`${plan.id}-${index}`}
                               className={`text-sm cursor-pointer ${itemCompleted ? 'text-muted-foreground line-through' : 'text-foreground'}`}
                             >
-                              {item}
+                              {typeof item === 'string' ? item : ''}
                             </label>
                           </div>
                         );

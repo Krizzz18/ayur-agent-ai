@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import DashboardHome from '@/components/DashboardHome';
 import ChatInterface from '@/components/ChatInterface';
@@ -13,53 +14,38 @@ import PrakritiQuizComponent from '@/components/PrakritiquizComponent';
 import AgniTracker from '@/components/AgniTracker';
 import InteractiveChatInterface from '@/components/InteractiveChatInterface';
 import EnhancedProgressTracker from '@/components/EnhancedProgressTracker';
+import ProfileSection from '@/components/ProfileSection';
 import { useAuth } from '@/hooks/useAuth';
-import { Button } from '@/components/ui/button';
+import { useAppContext } from '@/contexts/AppContext';
 import { Card } from '@/components/ui/card';
 
 const Index = () => {
-  const [activeTab, setActiveTab] = useState('home');
-  const [userDosha, setUserDosha] = useState<string>('');
-  const [recommendations, setRecommendations] = useState<any>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const { userDosha, recommendations, setRecommendations } = useAppContext();
+  
+  const getActiveTab = () => {
+    const path = location.pathname.split('/dashboard/')[1] || 'home';
+    return path;
+  };
+  
+  const [activeTab, setActiveTab] = useState(getActiveTab());
 
-  // Allow guest access - no redirect needed
+  useEffect(() => {
+    const newTab = getActiveTab();
+    if (newTab !== activeTab) {
+      setActiveTab(newTab);
+    }
+  }, [location]);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    navigate(`/dashboard/${tab}`);
+  };
 
   const handleRecommendationsUpdate = (recs: any) => {
     setRecommendations(recs);
-    // Extract dosha from recommendations or set a default
-    if (recs && recs.dosha) {
-      setUserDosha(recs.dosha);
-    }
-  };
-
-  const renderActiveComponent = () => {
-    switch (activeTab) {
-      case 'home':
-        return <DashboardHome userDosha={userDosha || 'Vata'} />;
-      case 'patients':
-        return <PatientManagement />;
-      case 'diet-chart':
-        return <DietChartModule />;
-      case 'chat':
-        return <InteractiveChatInterface onRecommendationsUpdate={handleRecommendationsUpdate} />;
-      case 'plans':
-        return <PlansView userDosha={userDosha || 'Vata'} recommendations={recommendations} />;
-      case 'progress':
-        return <EnhancedProgressTracker userDosha={userDosha || 'Vata'} recommendations={recommendations} />;
-      case 'food-database':
-        return <EnhancedFoodDatabase />;
-      case 'doctor-panel':
-        return <DoctorDashboard />;
-      case 'appointments':
-        return <AppointmentScheduler />;
-      case 'prakriti-quiz':
-        return <PrakritiQuizComponent />;
-      case 'agni-tracker':
-        return <AgniTracker />;
-      default:
-        return <DashboardHome userDosha={userDosha || 'Vata'} />;
-    }
   };
 
   if (loading) {
@@ -72,17 +58,27 @@ const Index = () => {
     );
   }
 
-  // Allow both authenticated and guest users to access the dashboard
-
   return (
     <div className="flex h-screen bg-background transition-colors duration-500">
-      {/* Sidebar Navigation */}
-      <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
+      <Navigation activeTab={activeTab} onTabChange={handleTabChange} />
       
-      {/* Main Content */}
       <main className="flex-1 overflow-auto">
         <div className="p-6 max-w-7xl mx-auto">
-          {renderActiveComponent()}
+          <Routes>
+            <Route path="/" element={<DashboardHome userDosha={userDosha || 'Vata'} />} />
+            <Route path="home" element={<DashboardHome userDosha={userDosha || 'Vata'} />} />
+            <Route path="chat" element={<InteractiveChatInterface onRecommendationsUpdate={handleRecommendationsUpdate} />} />
+            <Route path="plans" element={<PlansView userDosha={userDosha || 'Vata'} recommendations={recommendations} />} />
+            <Route path="progress" element={<EnhancedProgressTracker userDosha={userDosha || 'Vata'} recommendations={recommendations} />} />
+            <Route path="prakriti-quiz" element={<PrakritiQuizComponent />} />
+            <Route path="agni-tracker" element={<AgniTracker />} />
+            <Route path="patients" element={<PatientManagement />} />
+            <Route path="diet-chart" element={<DietChartModule />} />
+            <Route path="food-database" element={<EnhancedFoodDatabase />} />
+            <Route path="appointments" element={<AppointmentScheduler />} />
+            <Route path="doctor-panel" element={<DoctorDashboard />} />
+            <Route path="profile" element={<ProfileSection />} />
+          </Routes>
         </div>
       </main>
     </div>

@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useConversationMemory } from '@/hooks/useConversationMemory';
+import { useAppContext } from '@/contexts/AppContext';
 
 interface Message {
   id: string;
@@ -21,17 +22,37 @@ interface ChatInterfaceProps {
   onRecommendationsUpdate?: (recommendations: any) => void;
 }
 
+const questions = [
+  { key: 'age', question: 'What is your age?' },
+  { key: 'gender', question: 'What is your gender? (Male/Female/Other)' },
+  { key: 'location', question: 'Which city/location do you live in?' },
+  { key: 'diet', question: 'What are your dietary preferences? (Vegetarian/Non-Vegetarian/Vegan)' },
+  { key: 'symptoms', question: 'What health issues or symptoms are you experiencing? Please describe in detail.' },
+  { key: 'sleep', question: 'How many hours do you sleep per day?' },
+  { key: 'exercise', question: 'How often do you exercise? (Daily/Weekly/Rarely/Never)' },
+  { key: 'stress', question: 'Do you experience stress or anxiety? If yes, please describe.' },
+];
+
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ onRecommendationsUpdate }) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
+  const { userAge, setUserAge } = useAppContext();
+  
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const greeting = userAge 
+      ? 'Namaste, respected one! 🙏 How can I assist you with your wellness journey today?'
+      : 'Namaste, respected one! 🙏 I am your Ayurvedic consultant with 15+ years of experience. I will ask you a few questions to understand your health better and then provide personalized Ayurvedic recommendations.\n\nLet me start by asking: What is your age?';
+    
+    return [{
       id: '1',
-      text: 'Namaste, respected one! 🙏 I am your Ayurvedic consultant with 15+ years of experience. I will ask you a few questions to understand your health better and then provide personalized Ayurvedic recommendations.\n\nLet me start by asking: What is your age?',
+      text: greeting,
       sender: 'agent',
       timestamp: new Date(),
-    }
-  ]);
-  const [questionSequence, setQuestionSequence] = useState(0);
-  const [userResponses, setUserResponses] = useState<Record<string, string>>({});
+    }];
+  });
+  
+  const [questionSequence, setQuestionSequence] = useState(userAge ? questions.length : 0);
+  const [userResponses, setUserResponses] = useState<Record<string, string>>(() => {
+    return userAge ? { age: userAge.toString() } : {};
+  });
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -126,17 +147,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onRecommendationsUpdate }
     }
   };
 
-  const questions = [
-    { key: 'age', question: 'What is your age?' },
-    { key: 'gender', question: 'What is your gender? (Male/Female/Other)' },
-    { key: 'location', question: 'Which city/location do you live in?' },
-    { key: 'diet', question: 'What are your dietary preferences? (Vegetarian/Non-Vegetarian/Vegan)' },
-    { key: 'symptoms', question: 'What health issues or symptoms are you experiencing? Please describe in detail.' },
-    { key: 'sleep', question: 'How many hours do you sleep per day?' },
-    { key: 'exercise', question: 'How often do you exercise? (Daily/Weekly/Rarely/Never)' },
-    { key: 'stress', question: 'Do you experience stress or anxiety? If yes, please describe.' },
-  ];
-
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
 
@@ -160,6 +170,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onRecommendationsUpdate }
       if (questionSequence < questions.length) {
         const currentQuestion = questions[questionSequence];
         setUserResponses(prev => ({ ...prev, [currentQuestion.key]: currentInput }));
+        
+        // Store age in global context
+        if (currentQuestion.key === 'age') {
+          const ageNum = parseInt(currentInput);
+          if (!isNaN(ageNum)) {
+            setUserAge(ageNum);
+          }
+        }
       }
 
       let agentReply = '';

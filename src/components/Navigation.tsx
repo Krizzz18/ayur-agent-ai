@@ -24,6 +24,7 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
     { id: 'food-database', label: 'Food Database', icon: Database },
     { id: 'appointments', label: 'Appointments', icon: Calendar },
     { id: 'doctor-panel', label: 'Doctor Panel', icon: Stethoscope },
+    { id: 'profile', label: 'Profile', icon: User },
   ];
 
   return (
@@ -74,13 +75,6 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
         })}
       </div>
 
-      {/* User Profile */}
-      <div className="pt-4 border-t border-border">
-        <Button variant="ghost" className="w-full justify-start gap-3">
-          <User size={20} />
-          Profile
-        </Button>
-      </div>
     </nav>
   );
 };
