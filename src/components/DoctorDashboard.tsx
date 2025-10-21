@@ -1,548 +1,313 @@
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  Users, 
-  TrendingUp, 
-  Calendar, 
-  FileText, 
-  Search,
-  Plus,
-  Eye,
-  Edit,
-  Download,
-  BarChart3,
-  Activity,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  User,
-  Stethoscope
-} from 'lucide-react';
+import { Plus, Download, Edit, Eye } from 'lucide-react';
+import { useAppContext } from '@/contexts/AppContext';
 import { useToast } from '@/hooks/use-toast';
+import jsPDF from 'jspdf';
 
-interface Patient {
+interface Treatment {
   id: string;
-  name: string;
-  age: number;
-  gender: string;
-  dosha: string;
-  lastVisit: string;
-  status: 'active' | 'pending' | 'completed';
-  compliance: number;
-  nextAppointment?: string;
-  symptoms: string[];
-  avatar?: string;
+  patientId: string;
+  patientName: string;
+  date: Date;
+  diagnosis: string;
+  treatment: string;
+  diet: string;
+  lifestyle: string;
+  followUp: Date;
 }
 
 const DoctorDashboard = () => {
+  const { patients } = useAppContext();
   const { toast } = useToast();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedDosha, setSelectedDosha] = useState('all');
-  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [treatments, setTreatments] = useState<Treatment[]>([]);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState('');
+  const [viewTreatment, setViewTreatment] = useState<Treatment | null>(null);
 
-  const [patients] = useState<Patient[]>([
-    {
-      id: '1',
-      name: 'Ramesh Kumar',
-      age: 32,
-      gender: 'Male',
-      dosha: 'Vata',
-      lastVisit: '2025-09-28',
-      status: 'active',
-      compliance: 85,
-      nextAppointment: '2025-10-05',
-      symptoms: ['anxiety', 'insomnia', 'digestion'],
-      avatar: '👨'
-    },
-    {
-      id: '2',
-      name: 'Priya Sharma',
-      age: 28,
-      gender: 'Female',
-      dosha: 'Pitta',
-      lastVisit: '2025-09-29',
-      status: 'pending',
-      compliance: 92,
-      nextAppointment: '2025-10-02',
-      symptoms: ['acidity', 'skin', 'headache'],
-      avatar: '👩'
-    },
-    {
-      id: '3',
-      name: 'Anil Patel',
-      age: 45,
-      gender: 'Male',
-      dosha: 'Kapha',
-      lastVisit: '2025-09-25',
-      status: 'completed',
-      compliance: 78,
-      symptoms: ['weight', 'fatigue', 'joint'],
-      avatar: '👨‍🦳'
-    },
-    {
-      id: '4',
-      name: 'Meera Singh',
-      age: 35,
-      gender: 'Female',
-      dosha: 'Vata-Pitta',
-      lastVisit: '2025-09-30',
-      status: 'active',
-      compliance: 89,
-      nextAppointment: '2025-10-07',
-      symptoms: ['stress', 'sleep', 'digestion'],
-      avatar: '👩‍💼'
-    }
-  ]);
-
-  const dashboardStats = {
-    totalPatients: patients.length,
-    activePatients: patients.filter(p => p.status === 'active').length,
-    pendingAppointments: patients.filter(p => p.status === 'pending').length,
-    avgCompliance: Math.round(patients.reduce((sum, p) => sum + p.compliance, 0) / patients.length),
-    todayAppointments: 3,
-    weeklyRevenue: 45000,
-  };
-
-  const filteredPatients = patients.filter(patient => {
-    const matchesSearch = patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         patient.symptoms.some(s => s.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesDosha = selectedDosha === 'all' || patient.dosha.toLowerCase().includes(selectedDosha.toLowerCase());
-    const matchesStatus = selectedStatus === 'all' || patient.status === selectedStatus;
-    
-    return matchesSearch && matchesDosha && matchesStatus;
+  const [formData, setFormData] = useState({
+    diagnosis: '',
+    treatment: '',
+    diet: '',
+    lifestyle: '',
+    followUp: '',
   });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-500';
-      case 'pending': return 'bg-yellow-500';
-      case 'completed': return 'bg-blue-500';
-      default: return 'bg-gray-500';
+  const handleAddTreatment = () => {
+    if (!selectedPatient) {
+      toast({ title: '⚠️ Error', description: 'Please select a patient', variant: 'destructive' });
+      return;
     }
+
+    const patient = patients.find(p => p.id === selectedPatient);
+    if (!patient) return;
+
+    const newTreatment: Treatment = {
+      id: Date.now().toString(),
+      patientId: selectedPatient,
+      patientName: patient.name,
+      date: new Date(),
+      diagnosis: formData.diagnosis,
+      treatment: formData.treatment,
+      diet: formData.diet,
+      lifestyle: formData.lifestyle,
+      followUp: new Date(formData.followUp),
+    };
+
+    setTreatments([...treatments, newTreatment]);
+    setIsAddDialogOpen(false);
+    setFormData({ diagnosis: '', treatment: '', diet: '', lifestyle: '', followUp: '' });
+    toast({ title: '✅ Treatment Plan Created', description: `Plan created for ${patient.name}` });
   };
 
-  const getDoshaColor = (dosha: string) => {
-    if (dosha.includes('Vata')) return 'gradient-vata';
-    if (dosha.includes('Pitta')) return 'gradient-pitta';
-    if (dosha.includes('Kapha')) return 'gradient-kapha';
-    return 'gradient-healing';
+  const downloadPlan = (treatment: Treatment) => {
+    const doc = new jsPDF();
+    
+    doc.setFontSize(20);
+    doc.text('Ayurvedic Treatment Plan', 20, 20);
+    
+    doc.setFontSize(12);
+    doc.text(`Patient: ${treatment.patientName}`, 20, 40);
+    doc.text(`Date: ${treatment.date.toLocaleDateString()}`, 20, 50);
+    
+    doc.text('Diagnosis:', 20, 70);
+    doc.setFontSize(10);
+    doc.text(treatment.diagnosis, 20, 80, { maxWidth: 170 });
+    
+    doc.setFontSize(12);
+    doc.text('Treatment:', 20, 100);
+    doc.setFontSize(10);
+    doc.text(treatment.treatment, 20, 110, { maxWidth: 170 });
+    
+    doc.setFontSize(12);
+    doc.text('Diet Recommendations:', 20, 140);
+    doc.setFontSize(10);
+    doc.text(treatment.diet, 20, 150, { maxWidth: 170 });
+    
+    doc.setFontSize(12);
+    doc.text('Lifestyle Modifications:', 20, 180);
+    doc.setFontSize(10);
+    doc.text(treatment.lifestyle, 20, 190, { maxWidth: 170 });
+    
+    doc.setFontSize(12);
+    doc.text(`Follow-up: ${treatment.followUp.toLocaleDateString()}`, 20, 220);
+    
+    doc.save(`treatment-plan-${treatment.patientName}-${treatment.date.toLocaleDateString()}.pdf`);
+    toast({ title: '📄 PDF Downloaded', description: 'Treatment plan downloaded successfully' });
   };
 
   return (
     <div className="space-y-6">
-      {/* Doctor Header */}
-      <Card className="p-6 gradient-healing text-white">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
-              <Stethoscope size={32} className="text-white" />
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Doctor Dashboard</h2>
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              New Treatment Plan
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Create Treatment Plan</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Select Patient</Label>
+                <Select value={selectedPatient} onValueChange={setSelectedPatient}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a patient" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {patients.map(patient => (
+                      <SelectItem key={patient.id} value={patient.id}>
+                        {patient.name} - {patient.dosha} ({patient.age}y)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Diagnosis</Label>
+                <Textarea
+                  placeholder="Enter diagnosis and assessment..."
+                  value={formData.diagnosis}
+                  onChange={(e) => setFormData({ ...formData, diagnosis: e.target.value })}
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label>Treatment Protocol</Label>
+                <Textarea
+                  placeholder="Medications, therapies, Panchakarma procedures..."
+                  value={formData.treatment}
+                  onChange={(e) => setFormData({ ...formData, treatment: e.target.value })}
+                  rows={4}
+                />
+              </div>
+
+              <div>
+                <Label>Diet Recommendations</Label>
+                <Textarea
+                  placeholder="Specific foods to eat/avoid, meal timings..."
+                  value={formData.diet}
+                  onChange={(e) => setFormData({ ...formData, diet: e.target.value })}
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label>Lifestyle Modifications</Label>
+                <Textarea
+                  placeholder="Daily routine, exercise, sleep schedule..."
+                  value={formData.lifestyle}
+                  onChange={(e) => setFormData({ ...formData, lifestyle: e.target.value })}
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label>Follow-up Date</Label>
+                <Input
+                  type="date"
+                  value={formData.followUp}
+                  onChange={(e) => setFormData({ ...formData, followUp: e.target.value })}
+                />
+              </div>
+
+              <Button onClick={handleAddTreatment} className="w-full">
+                Create Treatment Plan
+              </Button>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold">Dr. Ayurveda Specialist</h1>
-              <p className="text-white/90">Ayurvedic Practice Management Dashboard</p>
-              <Badge variant="secondary" className="mt-1 bg-white/20 text-white">
-                15+ Years Experience
-              </Badge>
-            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="p-4">
+          <div className="text-2xl font-bold">{patients.length}</div>
+          <p className="text-sm text-muted-foreground">Total Patients</p>
+        </Card>
+        <Card className="p-4">
+          <div className="text-2xl font-bold">{treatments.length}</div>
+          <p className="text-sm text-muted-foreground">Treatment Plans</p>
+        </Card>
+        <Card className="p-4">
+          <div className="text-2xl font-bold">
+            {treatments.filter(t => t.followUp > new Date()).length}
           </div>
-          <div className="text-right">
-            <div className="text-3xl font-bold">{dashboardStats.todayAppointments}</div>
-            <p className="text-white/90">Today's Appointments</p>
+          <p className="text-sm text-muted-foreground">Upcoming Follow-ups</p>
+        </Card>
+        <Card className="p-4">
+          <div className="text-2xl font-bold">
+            {patients.filter(p => p.status === 'Active').length}
           </div>
-        </div>
-      </Card>
-
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="p-6 text-center">
-          <Users size={32} className="mx-auto mb-3 text-primary" />
-          <div className="text-2xl font-bold">{dashboardStats.totalPatients}</div>
-          <p className="text-muted-foreground">Total Patients</p>
-        </Card>
-
-        <Card className="p-6 text-center">
-          <Activity size={32} className="mx-auto mb-3 text-green-500" />
-          <div className="text-2xl font-bold">{dashboardStats.activePatients}</div>
-          <p className="text-muted-foreground">Active Treatments</p>
-        </Card>
-
-        <Card className="p-6 text-center">
-          <Clock size={32} className="mx-auto mb-3 text-yellow-500" />
-          <div className="text-2xl font-bold">{dashboardStats.pendingAppointments}</div>
-          <p className="text-muted-foreground">Pending Appointments</p>
-        </Card>
-
-        <Card className="p-6 text-center">
-          <TrendingUp size={32} className="mx-auto mb-3 text-blue-500" />
-          <div className="text-2xl font-bold">{dashboardStats.avgCompliance}%</div>
-          <p className="text-muted-foreground">Avg Compliance</p>
+          <p className="text-sm text-muted-foreground">Active Cases</p>
         </Card>
       </div>
 
-      <Tabs defaultValue="patients" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="patients">Patient Management</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="appointments">Appointments</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
-        </TabsList>
-
-        {/* Patient Management Tab */}
-        <TabsContent value="patients" className="space-y-4">
-          {/* Search and Filters */}
-          <Card className="p-4">
-            <div className="flex flex-col md:flex-row gap-3">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search patients by name or symptoms..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Select value={selectedDosha} onValueChange={setSelectedDosha}>
-                <SelectTrigger className="w-full md:w-[180px]">
-                  <SelectValue placeholder="Filter by Dosha" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Doshas</SelectItem>
-                  <SelectItem value="vata">Vata</SelectItem>
-                  <SelectItem value="pitta">Pitta</SelectItem>
-                  <SelectItem value="kapha">Kapha</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                <SelectTrigger className="w-full md:w-[180px]">
-                  <SelectValue placeholder="Filter by Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Patient
-              </Button>
-            </div>
-          </Card>
-
-          {/* Patient List */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {filteredPatients.map((patient) => (
-              <Card key={patient.id} className="p-4 hover:shadow-lg transition-ayur">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="text-2xl">{patient.avatar}</div>
-                    <div>
-                      <h4 className="font-semibold">{patient.name}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {patient.age} years • {patient.gender}
-                      </p>
+      {/* Treatment Plans List */}
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4">Recent Treatment Plans</h3>
+        {treatments.length === 0 ? (
+          <p className="text-muted-foreground text-center py-8">No treatment plans yet. Create your first plan above.</p>
+        ) : (
+          <div className="space-y-4">
+            {treatments.map((treatment) => (
+              <Card key={treatment.id} className="p-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h4 className="font-semibold">{treatment.patientName}</h4>
+                      <Badge variant="outline">
+                        {treatment.date.toLocaleDateString()}
+                      </Badge>
                     </div>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      <span className="font-medium">Diagnosis:</span> {treatment.diagnosis.substring(0, 100)}...
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Follow-up: {treatment.followUp.toLocaleDateString()}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className={`w-3 h-3 rounded-full ${getStatusColor(patient.status)}`}></div>
-                    <Badge variant="outline" className="capitalize">
-                      {patient.status}
-                    </Badge>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setViewTreatment(treatment)}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => downloadPlan(treatment)}
+                    >
+                      <Download className="w-4 h-4" />
+                    </Button>
                   </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Dosha Type:</span>
-                    <Badge className={getDoshaColor(patient.dosha)} variant="secondary">
-                      {patient.dosha}
-                    </Badge>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Compliance:</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-green-500 transition-all"
-                          style={{ width: `${patient.compliance}%` }}
-                        />
-                      </div>
-                      <span className="text-sm font-medium">{patient.compliance}%</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Last Visit:</span>
-                    <span className="text-sm">{new Date(patient.lastVisit).toLocaleDateString()}</span>
-                  </div>
-
-                  {patient.nextAppointment && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Next Appointment:</span>
-                      <span className="text-sm font-medium text-primary">
-                        {new Date(patient.nextAppointment).toLocaleDateString()}
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="pt-2">
-                    <p className="text-sm text-muted-foreground mb-2">Symptoms:</p>
-                    <div className="flex flex-wrap gap-1">
-                      {patient.symptoms.map((symptom) => (
-                        <Badge key={symptom} variant="outline" className="text-xs">
-                          {symptom}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-2 mt-4">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1"
-                    onClick={() => {
-                      toast({
-                        title: `Viewing ${patient.name}'s Profile`,
-                        description: "Opening detailed patient information",
-                      });
-                    }}
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    View
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1"
-                    onClick={() => {
-                      toast({
-                        title: `Editing ${patient.name}'s Plan`,
-                        description: "Opening diet chart and treatment editor",
-                      });
-                    }}
-                  >
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit Plan
-                  </Button>
-                  <Button 
-                    size="sm"
-                    onClick={() => {
-                      toast({
-                        title: "Consultation Report Generated",
-                        description: `PDF report for ${patient.name} is ready for download`,
-                      });
-                    }}
-                  >
-                    <Download className="w-4 h-4" />
-                  </Button>
                 </div>
               </Card>
             ))}
           </div>
-        </TabsContent>
+        )}
+      </Card>
 
-        {/* Analytics Tab */}
-        <TabsContent value="analytics" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Patient Distribution by Dosha</h3>
-              <div className="space-y-3">
-                {['Vata', 'Pitta', 'Kapha'].map((dosha) => {
-                  const count = patients.filter(p => p.dosha.includes(dosha)).length;
-                  const percentage = (count / patients.length) * 100;
-                  return (
-                    <div key={dosha} className="space-y-1">
-                      <div className="flex justify-between">
-                        <span>{dosha}</span>
-                        <span>{count} patients ({percentage.toFixed(0)}%)</span>
-                      </div>
-                      <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full gradient-${dosha.toLowerCase()}`}
-                          style={{ width: `${percentage}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
+      {/* View Treatment Dialog */}
+      {viewTreatment && (
+        <Dialog open={!!viewTreatment} onOpenChange={() => setViewTreatment(null)}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Treatment Plan Details</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Patient</Label>
+                <p className="text-sm">{viewTreatment.patientName}</p>
               </div>
-            </Card>
-
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Treatment Compliance Rates</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span>Excellent (90%+)</span>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span>{patients.filter(p => p.compliance >= 90).length} patients</span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Good (70-89%)</span>
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-yellow-500" />
-                    <span>{patients.filter(p => p.compliance >= 70 && p.compliance < 90).length} patients</span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Needs Attention (&lt;70%)</span>
-                  <div className="flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-red-500" />
-                    <span>{patients.filter(p => p.compliance < 70).length} patients</span>
-                  </div>
-                </div>
+              <div>
+                <Label>Date</Label>
+                <p className="text-sm">{viewTreatment.date.toLocaleDateString()}</p>
               </div>
-            </Card>
-          </div>
-
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Monthly Revenue Trends</h3>
-            <div className="flex items-center justify-center h-40 text-muted-foreground">
-              <BarChart3 size={48} />
-              <span className="ml-3">Revenue analytics chart will be displayed here</span>
+              <div>
+                <Label>Diagnosis</Label>
+                <p className="text-sm">{viewTreatment.diagnosis}</p>
+              </div>
+              <div>
+                <Label>Treatment Protocol</Label>
+                <p className="text-sm">{viewTreatment.treatment}</p>
+              </div>
+              <div>
+                <Label>Diet Recommendations</Label>
+                <p className="text-sm">{viewTreatment.diet}</p>
+              </div>
+              <div>
+                <Label>Lifestyle Modifications</Label>
+                <p className="text-sm">{viewTreatment.lifestyle}</p>
+              </div>
+              <div>
+                <Label>Follow-up</Label>
+                <p className="text-sm">{viewTreatment.followUp.toLocaleDateString()}</p>
+              </div>
+              <Button onClick={() => downloadPlan(viewTreatment)} className="w-full">
+                <Download className="w-4 h-4 mr-2" />
+                Download PDF
+              </Button>
             </div>
-          </Card>
-        </TabsContent>
-
-        {/* Appointments Tab */}
-        <TabsContent value="appointments" className="space-y-4">
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Today's Schedule</h3>
-            <div className="space-y-3">
-              {patients.filter(p => p.nextAppointment).slice(0, 3).map((patient, index) => (
-                <div key={patient.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="text-xl">{patient.avatar}</div>
-                    <div>
-                      <p className="font-medium">{patient.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {patient.dosha} • Follow-up consultation
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium">
-                      {9 + index}:00 AM
-                    </p>
-                    <Badge variant="outline" className="mt-1">
-                      {index === 0 ? 'Current' : index === 1 ? 'Next' : 'Upcoming'}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <Button className="w-full mt-4">
-              <Calendar className="w-4 h-4 mr-2" />
-              View Full Calendar
-            </Button>
-          </Card>
-        </TabsContent>
-
-        {/* Reports Tab */}
-        <TabsContent value="reports" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Generate Reports</h3>
-              <div className="space-y-3">
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => {
-                    toast({
-                      title: "Patient Summary Report Generated",
-                      description: "Comprehensive report for all active patients is ready",
-                    });
-                  }}
-                >
-                  <FileText className="w-4 h-4 mr-2" />
-                  Patient Summary Report
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => {
-                    toast({
-                      title: "Treatment Compliance Report Generated",
-                      description: "Detailed compliance analysis is ready for download",
-                    });
-                  }}
-                >
-                  <TrendingUp className="w-4 h-4 mr-2" />
-                  Treatment Compliance Report
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => {
-                    toast({
-                      title: "Revenue Analysis Report Generated",
-                      description: "Monthly financial summary is ready",
-                    });
-                  }}
-                >
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  Revenue Analysis
-                </Button>
-              </div>
-            </Card>
-
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-              <div className="space-y-3">
-                <Button 
-                  className="w-full justify-start"
-                  onClick={() => {
-                    toast({
-                      title: "Bulk Diet Charts Generated",
-                      description: "Diet charts for all active patients created",
-                    });
-                  }}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Generate Bulk Diet Charts
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => {
-                    toast({
-                      title: "Patient Reminders Sent",
-                      description: "Appointment and medication reminders sent to all patients",
-                    });
-                  }}
-                >
-                  <Clock className="w-4 h-4 mr-2" />
-                  Send Patient Reminders
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-              onClick={() => {
-                toast({
-                  title: "Practice Analytics Updated",
-                  description: "All analytics and insights have been refreshed",
-                });
-              }}
-            >
-              <Activity className="w-4 h-4 mr-2" />
-              Refresh Analytics
-            </Button>
-          </div>
-        </Card>
-      </div>
-    </TabsContent>
-  </Tabs>
-</div>
+          </DialogContent>
+        </Dialog>
+      )}
+    </div>
   );
 };
 

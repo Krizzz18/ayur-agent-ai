@@ -21,6 +21,7 @@ import { useAppContext } from '@/contexts/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import SeasonalTipsDialog from './SeasonalTipsDialog';
 import AddTaskDialog from './AddTaskDialog';
+import DailyChallenge from './DailyChallenge';
 
 interface DashboardHomeProps {
   userDosha?: string;
@@ -246,6 +247,9 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({
           </Button>
         </div>
       </Card>
+
+      {/* Daily Challenges */}
+      <DailyChallenge />
 
       <SeasonalTipsDialog 
         open={seasonalTipsOpen} 
