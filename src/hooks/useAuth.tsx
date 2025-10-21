@@ -193,12 +193,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
+      
+      // Clear AppContext data on logout
+      localStorage.removeItem('ayuragent-state');
+      
       if (error) {
         toast({
           title: "Sign Out Error",
           description: error.message,
           variant: "destructive"
         });
+      } else {
+        toast({
+          title: "Signed Out Successfully",
+          description: "You have been logged out."
+        });
+        // Redirect to auth page
+        window.location.href = '/auth';
       }
       return { error };
     } catch (error: any) {

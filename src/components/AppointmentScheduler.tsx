@@ -221,6 +221,23 @@ const AppointmentScheduler = () => {
                       }}>
                         Complete
                       </Button>
+                      <Button size="sm" variant="outline" onClick={() => {
+                        toast({ 
+                          title: 'Reschedule Appointment',
+                          description: 'Select a new date and time'
+                        });
+                      }}>
+                        Reschedule
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => {
+                        setAppointments(appointments.filter(apt => apt.id !== appointment.id));
+                        toast({ 
+                          title: '❌ Appointment Cancelled',
+                          description: `${appointment.patientName}'s appointment has been cancelled`
+                        });
+                      }}>
+                        Cancel
+                      </Button>
                       {appointment.type === 'video' && (
                         <Button size="sm" variant="secondary">
                           <Video className="w-4 h-4 mr-2" />

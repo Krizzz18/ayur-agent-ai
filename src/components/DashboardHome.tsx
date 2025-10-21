@@ -12,8 +12,15 @@ import {
   Calendar,
   Heart,
   Leaf,
-  Sun
+  Sun,
+  Plus,
+  Coffee,
+  Sparkles
 } from 'lucide-react';
+import { useAppContext } from '@/contexts/AppContext';
+import { useToast } from '@/hooks/use-toast';
+import SeasonalTipsDialog from './SeasonalTipsDialog';
+import AddTaskDialog from './AddTaskDialog';
 
 interface DashboardHomeProps {
   userDosha?: string;
@@ -21,9 +28,12 @@ interface DashboardHomeProps {
 }
 
 const DashboardHome: React.FC<DashboardHomeProps> = ({ 
-  userDosha = 'Vata', 
-  todayProgress = 65 
+  userDosha = 'Vata'
 }) => {
+  const { totalPoints, currentStreak, completionPercentage, tasks, toggleTask, addTask } = useAppContext();
+  const { toast } = useToast();
+  const [seasonalTipsOpen, setSeasonalTipsOpen] = React.useState(false);
+  const [addTaskOpen, setAddTaskOpen] = React.useState(false);
   const doshaInfo = {
     Vata: {
       element: 'Air & Space',
@@ -77,7 +87,7 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({
             </p>
           </div>
           <div className="text-right">
-            <div className="text-3xl font-bold">{todayProgress}%</div>
+            <div className="text-3xl font-bold">{completionPercentage}%</div>
             <p className="text-white/90">Today's Progress</p>
           </div>
         </div>
@@ -125,9 +135,7 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({
             {weatherAdvice.advice}
           </p>
           
-          <Button variant="outline" size="sm" className="mt-4 w-full" onClick={() => {
-            alert('Seasonal Ayurvedic Tips:\n\n• Summer: Stay cool with coconut water and mint\n• Monsoon: Boost immunity with turmeric and ginger\n• Winter: Keep warm with ghee and sesame oil\n• Spring: Detoxify with bitter greens and triphala');
-          }}>
+          <Button variant="outline" size="sm" className="mt-4 w-full" onClick={() => setSeasonalTipsOpen(true)}>
             View Seasonal Tips
           </Button>
         </Card>
@@ -170,90 +178,91 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          {todayTasks.map((task) => {
-            const [taskState, setTaskState] = React.useState(task.completed);
-            
-            return (
-              <Card 
-                key={task.id} 
-                className={`p-4 transition-ayur cursor-pointer ${
-                  taskState ? 'bg-secondary/20 border-secondary' : 'hover:shadow-gentle'
-                }`}
-                onClick={() => setTaskState(!taskState)}
-              >
-                <div className="flex items-start gap-3">
-                  <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 mt-0.5 ${
-                    taskState 
-                      ? 'bg-secondary border-secondary' 
-                      : 'border-muted-foreground'
-                  }`}>
-                    {taskState && (
-                      <div className="w-full h-full rounded-full bg-secondary"></div>
-                    )}
-                  </div>
-                  <div>
-                    <p className={`text-sm font-medium ${
-                      taskState ? 'text-muted-foreground line-through' : 'text-foreground'
-                    }`}>
-                      {task.task}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{task.time}</p>
-                  </div>
+          {tasks.slice(0, 5).map((task) => (
+            <Card 
+              key={task.id} 
+              className={`p-4 transition-ayur cursor-pointer ${
+                task.completed ? 'bg-secondary/20 border-secondary' : 'hover:shadow-gentle'
+              }`}
+              onClick={() => {
+                toggleTask(task.id);
+                toast({
+                  title: task.completed ? '✅ Task Completed' : '⬜ Task Incomplete',
+                  description: task.completed ? `+${task.points} points earned!` : 'Keep going!',
+                });
+              }}
+            >
+              <div className="flex items-start gap-3">
+                <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 mt-0.5 ${
+                  task.completed 
+                    ? 'bg-secondary border-secondary' 
+                    : 'border-muted-foreground'
+                }`}>
+                  {task.completed && (
+                    <div className="w-full h-full rounded-full bg-secondary"></div>
+                  )}
                 </div>
-              </Card>
-            );
-          })}
+                <div>
+                  <p className={`text-sm font-medium ${
+                    task.completed ? 'text-muted-foreground line-through' : 'text-foreground'
+                  }`}>
+                    {task.task}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{task.time}</p>
+                </div>
+              </div>
+            </Card>
+          ))}
         </div>
       </Card>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Button 
-          variant="vata" 
-          className="h-20 flex-col gap-2 hover:scale-105 transition-ayur"
-          onClick={() => {
-            const audio = new Audio();
-            audio.play().catch(() => {});
-            alert('Morning Routine: Start your day with oil massage (Abhyanga), followed by warm water with lemon. Practice 15 minutes of pranayama.');
-          }}
-        >
-          <Sunrise size={24} />
-          <span>Morning Routine</span>
-        </Button>
-        
-        <Button 
-          variant="pitta" 
-          className="h-20 flex-col gap-2 hover:scale-105 transition-ayur"
-          onClick={() => {
-            alert('Hydration Tracker: Drink 2-3 liters of water daily. Aim for 8-10 glasses. Track your intake throughout the day.');
-          }}
-        >
-          <Droplets size={24} />
-          <span>Hydration Tracker</span>
-        </Button>
-        
-        <Button 
-          variant="kapha" 
-          className="h-20 flex-col gap-2 hover:scale-105 transition-ayur"
-          onClick={() => {
-            alert('Herb Reminder: Take Ashwagandha (500mg) twice daily, Triphala before bed, and Turmeric milk in the evening.');
-          }}
-        >
-          <Leaf size={24} />
-          <span>Herb Reminder</span>
-        </Button>
-        
-        <Button 
-          variant="healing" 
-          className="h-20 flex-col gap-2 hover:scale-105 transition-ayur"
-          onClick={() => {
-            alert('Wellness Check: How are you feeling today? Make sure to log your symptoms, energy levels, and any changes in your routine.');
-          }}
-        >
-          <Heart size={24} />
-          <span>Wellness Check</span>
-        </Button>
-      </div>
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Quick Actions</h3>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Button variant="outline" className="h-auto flex-col py-4" onClick={() => setAddTaskOpen(true)}>
+            <Plus className="w-6 h-6 mb-2" />
+            <span className="text-sm">Add Task</span>
+          </Button>
+          <Button variant="outline" className="h-auto flex-col py-4" onClick={() => {
+            toast({ title: '🌅 Morning Routine', description: 'Starting your day with Abhyanga oil massage' });
+          }}>
+            <Coffee className="w-6 h-6 mb-2" />
+            <span className="text-sm">Morning Routine</span>
+          </Button>
+          <Button variant="outline" className="h-auto flex-col py-4" onClick={() => {
+            toast({ title: '💧 Hydration', description: 'Remember to drink water throughout the day' });
+          }}>
+            <Droplets className="w-6 h-6 mb-2" />
+            <span className="text-sm">Hydration</span>
+          </Button>
+          <Button variant="outline" className="h-auto flex-col py-4" onClick={() => {
+            toast({ title: '✨ Wellness Check', description: 'How are you feeling today?' });
+          }}>
+            <Sparkles className="w-6 h-6 mb-2" />
+            <span className="text-sm">Wellness Check</span>
+          </Button>
+        </div>
+      </Card>
+
+      <SeasonalTipsDialog 
+        open={seasonalTipsOpen} 
+        onOpenChange={setSeasonalTipsOpen} 
+        userDosha={userDosha}
+      />
+      <AddTaskDialog 
+        open={addTaskOpen} 
+        onOpenChange={setAddTaskOpen} 
+        onAddTask={(task) => {
+          addTask(task);
+          toast({
+            title: '✅ Task Added',
+            description: `${task.task} has been added to your routine`
+          });
+        }}
+      />
     </div>
   );
 };

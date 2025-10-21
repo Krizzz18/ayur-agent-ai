@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageCircle, Home, User, TrendingUp, BookOpen, ChefHat, Users, Calendar, Database, Stethoscope, Flame, Brain } from 'lucide-react';
+import { MessageCircle, Home, User, TrendingUp, BookOpen, ChefHat, Users, Calendar, Database, Stethoscope, FileQuestion } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ThemeToggle from '@/components/ThemeToggle';
 import { useAuth } from '@/hooks/useAuth';
@@ -17,8 +17,7 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
     { id: 'chat', label: 'AI Consultant', icon: MessageCircle },
     { id: 'plans', label: 'Wellness Plans', icon: BookOpen },
     { id: 'progress', label: 'Progress', icon: TrendingUp },
-    { id: 'prakriti-quiz', label: 'Prakriti Quiz', icon: Brain },
-    { id: 'agni-tracker', label: 'Agni Tracker', icon: Flame },
+    { id: 'constitution', label: 'Constitution', icon: FileQuestion },
     { id: 'patients', label: 'Patients', icon: Users },
     { id: 'diet-chart', label: 'Diet Charts', icon: ChefHat },
     { id: 'food-database', label: 'Food Database', icon: Database },

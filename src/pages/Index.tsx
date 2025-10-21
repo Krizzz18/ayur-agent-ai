@@ -10,8 +10,7 @@ import PatientManagement from '@/components/PatientManagement';
 import EnhancedFoodDatabase from '@/components/EnhancedFoodDatabase';
 import DoctorDashboard from '@/components/DoctorDashboard';
 import AppointmentScheduler from '@/components/AppointmentScheduler';
-import PrakritiQuizComponent from '@/components/PrakritiquizComponent';
-import AgniTracker from '@/components/AgniTracker';
+import ConstitutionAssessment from '@/components/ConstitutionAssessment';
 import InteractiveChatInterface from '@/components/InteractiveChatInterface';
 import EnhancedProgressTracker from '@/components/EnhancedProgressTracker';
 import ProfileSection from '@/components/ProfileSection';
@@ -70,8 +69,7 @@ const Index = () => {
             <Route path="chat" element={<InteractiveChatInterface onRecommendationsUpdate={handleRecommendationsUpdate} />} />
             <Route path="plans" element={<PlansView userDosha={userDosha || 'Vata'} recommendations={recommendations} />} />
             <Route path="progress" element={<EnhancedProgressTracker userDosha={userDosha || 'Vata'} recommendations={recommendations} />} />
-            <Route path="prakriti-quiz" element={<PrakritiQuizComponent />} />
-            <Route path="agni-tracker" element={<AgniTracker />} />
+            <Route path="constitution" element={<ConstitutionAssessment />} />
             <Route path="patients" element={<PatientManagement />} />
             <Route path="diet-chart" element={<DietChartModule />} />
             <Route path="food-database" element={<EnhancedFoodDatabase />} />
