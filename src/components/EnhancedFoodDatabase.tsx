@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Search, Plus, Edit, Trash2 } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Food {
@@ -14,42 +14,38 @@ interface Food {
   name: string;
   category: string;
   rasa: string[];
+  guna?: string[];
   virya: string;
   vipaka: string;
   doshaEffect: { vata: string; pitta: string; kapha: string };
+  season?: string[];
   calories: number;
   protein: number;
   carbs: number;
   fat: number;
   fiber: number;
+  vitamins?: string[];
+  minerals?: string[];
 }
 
-const sampleFoods: Food[] = [
-  { id: '1', name: 'Rice (White)', category: 'Grains', rasa: ['Sweet'], virya: 'Cooling', vipaka: 'Sweet', doshaEffect: { vata: 'Balances', pitta: 'Balances', kapha: 'Increases' }, calories: 130, protein: 2.7, carbs: 28, fat: 0.3, fiber: 0.4 },
-  { id: '2', name: 'Wheat', category: 'Grains', rasa: ['Sweet'], virya: 'Cooling', vipaka: 'Sweet', doshaEffect: { vata: 'Balances', pitta: 'Balances', kapha: 'Increases' }, calories: 340, protein: 13, carbs: 72, fat: 2.5, fiber: 12 },
-  { id: '3', name: 'Moong Dal', category: 'Legumes', rasa: ['Sweet', 'Astringent'], virya: 'Cooling', vipaka: 'Sweet', doshaEffect: { vata: 'Neutral', pitta: 'Balances', kapha: 'Balances' }, calories: 347, protein: 24, carbs: 59, fat: 1.2, fiber: 16 },
-  { id: '4', name: 'Ginger', category: 'Spices', rasa: ['Pungent', 'Sweet'], virya: 'Heating', vipaka: 'Sweet', doshaEffect: { vata: 'Balances', pitta: 'Increases', kapha: 'Balances' }, calories: 80, protein: 1.8, carbs: 18, fat: 0.8, fiber: 2 },
-  { id: '5', name: 'Turmeric', category: 'Spices', rasa: ['Bitter', 'Pungent'], virya: 'Heating', vipaka: 'Pungent', doshaEffect: { vata: 'Balances', pitta: 'Neutral', kapha: 'Balances' }, calories: 312, protein: 9.7, carbs: 67, fat: 3.2, fiber: 22 },
-  { id: '6', name: 'Ghee', category: 'Dairy', rasa: ['Sweet'], virya: 'Cooling', vipaka: 'Sweet', doshaEffect: { vata: 'Balances', pitta: 'Balances', kapha: 'Increases' }, calories: 900, protein: 0, carbs: 0, fat: 100, fiber: 0 },
-  { id: '7', name: 'Milk (Cow)', category: 'Dairy', rasa: ['Sweet'], virya: 'Cooling', vipaka: 'Sweet', doshaEffect: { vata: 'Balances', pitta: 'Balances', kapha: 'Increases' }, calories: 61, protein: 3.2, carbs: 4.8, fat: 3.3, fiber: 0 },
-  { id: '8', name: 'Honey', category: 'Sweeteners', rasa: ['Sweet', 'Astringent'], virya: 'Heating', vipaka: 'Sweet', doshaEffect: { vata: 'Balances', pitta: 'Increases', kapha: 'Balances' }, calories: 304, protein: 0.3, carbs: 82, fat: 0, fiber: 0.2 },
-  { id: '9', name: 'Apple', category: 'Fruits', rasa: ['Sweet', 'Astringent'], virya: 'Cooling', vipaka: 'Sweet', doshaEffect: { vata: 'Increases', pitta: 'Balances', kapha: 'Neutral' }, calories: 52, protein: 0.3, carbs: 14, fat: 0.2, fiber: 2.4 },
-  { id: '10', name: 'Banana', category: 'Fruits', rasa: ['Sweet'], virya: 'Heating', vipaka: 'Sweet', doshaEffect: { vata: 'Balances', pitta: 'Neutral', kapha: 'Increases' }, calories: 89, protein: 1.1, carbs: 23, fat: 0.3, fiber: 2.6 },
-  { id: '11', name: 'Coconut', category: 'Fruits', rasa: ['Sweet'], virya: 'Cooling', vipaka: 'Sweet', doshaEffect: { vata: 'Balances', pitta: 'Balances', kapha: 'Increases' }, calories: 354, protein: 3.3, carbs: 15, fat: 33, fiber: 9 },
-  { id: '12', name: 'Spinach', category: 'Vegetables', rasa: ['Astringent', 'Sweet'], virya: 'Cooling', vipaka: 'Pungent', doshaEffect: { vata: 'Increases', pitta: 'Balances', kapha: 'Balances' }, calories: 23, protein: 2.9, carbs: 3.6, fat: 0.4, fiber: 2.2 },
-  { id: '13', name: 'Carrot', category: 'Vegetables', rasa: ['Sweet', 'Bitter'], virya: 'Heating', vipaka: 'Pungent', doshaEffect: { vata: 'Balances', pitta: 'Neutral', kapha: 'Balances' }, calories: 41, protein: 0.9, carbs: 10, fat: 0.2, fiber: 2.8 },
-  { id: '14', name: 'Cucumber', category: 'Vegetables', rasa: ['Sweet', 'Astringent'], virya: 'Cooling', vipaka: 'Sweet', doshaEffect: { vata: 'Increases', pitta: 'Balances', kapha: 'Neutral' }, calories: 15, protein: 0.7, carbs: 3.6, fat: 0.1, fiber: 0.5 },
-  { id: '15', name: 'Cumin', category: 'Spices', rasa: ['Pungent', 'Bitter'], virya: 'Cooling', vipaka: 'Pungent', doshaEffect: { vata: 'Balances', pitta: 'Neutral', kapha: 'Balances' }, calories: 375, protein: 18, carbs: 44, fat: 22, fiber: 11 },
-];
+import foodData from '@/data/foodDatabase.json';
+
+const sampleFoods: Food[] = foodData;
 
 const EnhancedFoodDatabase = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [rasaFilter, setRasaFilter] = useState('all');
   const [doshaFilter, setDoshaFilter] = useState('all');
+  const [seasonFilter, setSeasonFilter] = useState('all');
   const [foods, setFoods] = useState<Food[]>(sampleFoods);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { toast } = useToast();
+
+  const handleRefresh = () => {
+    setFoods(sampleFoods);
+    toast({ title: '🔄 Refreshed', description: 'Food database reloaded' });
+  };
 
   const categories = ['all', ...Array.from(new Set(foods.map(f => f.category)))];
   const rasaOptions = ['all', 'Sweet', 'Sour', 'Salty', 'Pungent', 'Bitter', 'Astringent'];
@@ -62,8 +58,9 @@ const EnhancedFoodDatabase = () => {
       (doshaFilter === 'vata' && food.doshaEffect.vata === 'Balances') ||
       (doshaFilter === 'pitta' && food.doshaEffect.pitta === 'Balances') ||
       (doshaFilter === 'kapha' && food.doshaEffect.kapha === 'Balances');
+    const matchesSeason = seasonFilter === 'all' || (food.season && food.season.includes(seasonFilter));
     
-    return matchesSearch && matchesCategory && matchesRasa && matchesDosha;
+    return matchesSearch && matchesCategory && matchesRasa && matchesDosha && matchesSeason;
   });
 
   const deleteFood = (id: string) => {
@@ -81,20 +78,25 @@ const EnhancedFoodDatabase = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Ayurvedic Food Database</h2>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Food
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Food Item</DialogTitle>
-            </DialogHeader>
-            <p className="text-sm text-muted-foreground">Food addition form coming soon...</p>
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-2">
+          <Button variant="outline" size="icon" onClick={handleRefresh}>
+            <RefreshCw className="w-4 h-4" />
+          </Button>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Food
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Food Item</DialogTitle>
+              </DialogHeader>
+              <p className="text-sm text-muted-foreground">Food addition form coming soon...</p>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Search and Filters */}
