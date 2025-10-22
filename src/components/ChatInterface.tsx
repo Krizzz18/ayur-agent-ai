@@ -34,12 +34,20 @@ const questions = [
 ];
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ onRecommendationsUpdate }) => {
-  const { userAge, setUserAge } = useAppContext();
+  const { userAge, userGender, setUserAge, setUserGender } = useAppContext();
   
   const [messages, setMessages] = useState<Message[]>(() => {
-    const greeting = userAge 
-      ? 'Namaste, respected one! 🙏 How can I assist you with your wellness journey today?'
-      : 'Namaste, respected one! 🙏 I am your Ayurvedic consultant with 15+ years of experience. I will ask you a few questions to understand your health better and then provide personalized Ayurvedic recommendations.\n\nLet me start by asking: What is your age?';
+    // Determine which question to start with based on stored user info
+    const hasBasicInfo = userAge && userGender;
+    let greeting = '';
+    
+    if (hasBasicInfo) {
+      greeting = 'Namaste, respected one! 🙏 How can I assist you with your wellness journey today?';
+    } else if (userAge && !userGender) {
+      greeting = 'Welcome back! 🙏 To continue, what is your gender? (Male/Female/Other)';
+    } else {
+      greeting = 'Namaste, respected one! 🙏 I am your Ayurvedic consultant with 15+ years of experience. I will ask you a few questions to understand your health better and then provide personalized Ayurvedic recommendations.\n\nLet me start by asking: What is your age?';
+    }
     
     return [{
       id: '1',
@@ -49,9 +57,19 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onRecommendationsUpdate }
     }];
   });
   
-  const [questionSequence, setQuestionSequence] = useState(userAge ? questions.length : 0);
+  // Calculate starting question index based on what info we already have
+  const getStartingQuestionIndex = () => {
+    if (userAge && userGender) return 2; // Skip age and gender
+    if (userAge) return 1; // Skip only age
+    return 0; // Start from age
+  };
+  
+  const [questionSequence, setQuestionSequence] = useState(getStartingQuestionIndex());
   const [userResponses, setUserResponses] = useState<Record<string, string>>(() => {
-    return userAge ? { age: userAge.toString() } : {};
+    const responses: Record<string, string> = {};
+    if (userAge) responses.age = userAge.toString();
+    if (userGender) responses.gender = userGender;
+    return responses;
   });
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -171,12 +189,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onRecommendationsUpdate }
         const currentQuestion = questions[questionSequence];
         setUserResponses(prev => ({ ...prev, [currentQuestion.key]: currentInput }));
         
-        // Store age in global context
+        // Store age and gender in global context for persistence
         if (currentQuestion.key === 'age') {
           const ageNum = parseInt(currentInput);
           if (!isNaN(ageNum)) {
             setUserAge(ageNum);
           }
+        }
+        if (currentQuestion.key === 'gender') {
+          setUserGender(currentInput);
         }
       }
 
@@ -219,11 +240,14 @@ Format the response clearly and professionally.`;
         // Extract insights
         extractInsightsFromResponse(agentReply);
         
-        // Parse recommendations
-        if (onRecommendationsUpdate) {
-          const recommendations = parseRecommendationsFromResponse(agentReply);
-          onRecommendationsUpdate(recommendations);
-        }
+        // Store recommendations for later instead of auto-updating
+        const recommendations = parseRecommendationsFromResponse(agentReply);
+        
+        // Add button prompt to review and add to wellness plan
+        agentReply += '\n\n💡 Would you like to add these recommendations to your Wellness Plan? Click the button below to review and confirm.';
+        
+        // Store recommendations in state for the button to use
+        setUserResponses(prev => ({ ...prev, pendingRecommendations: JSON.stringify(recommendations) }));
       } else {
         // After recommendations, allow free-form conversation
         const contextualContext = getContextForAI();
@@ -247,6 +271,20 @@ Format the response clearly and professionally.`;
       };
       
       setMessages(prev => [...prev, agentMessage]);
+      
+      // Add button after recommendations are generated
+      if (questionSequence === questions.length && userResponses.pendingRecommendations) {
+        setTimeout(() => {
+          const buttonMessage: Message = {
+            id: (Date.now() + 2).toString(),
+            text: '__ADD_TO_PLAN_BUTTON__', // Special marker for button
+            sender: 'agent',
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, buttonMessage]);
+        }, 500);
+      }
+      
       await saveMessageToSupabase(agentMessage);
 
     } catch (error: any) {
@@ -297,6 +335,25 @@ Format the response clearly and professionally.`;
     }
   };
 
+  const handleAddToPlan = () => {
+    if (userResponses.pendingRecommendations && onRecommendationsUpdate) {
+      const recommendations = JSON.parse(userResponses.pendingRecommendations);
+      onRecommendationsUpdate(recommendations);
+      
+      toast({
+        title: "Added to Wellness Plan! 🌿",
+        description: "Your personalized recommendations are now in your plan",
+      });
+      
+      // Remove the button and pending recommendations
+      setMessages(prev => prev.filter(msg => msg.text !== '__ADD_TO_PLAN_BUTTON__'));
+      setUserResponses(prev => {
+        const { pendingRecommendations, ...rest } = prev;
+        return rest;
+      });
+    }
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -327,43 +384,61 @@ Format the response clearly and professionally.`;
 
       {/* Messages */}
       <div className="flex-1 p-4 overflow-y-auto space-y-4">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex gap-3 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            {message.sender === 'agent' && (
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 rounded-full gradient-healing flex items-center justify-center">
-                  <Bot size={16} className="text-white" />
+        {messages.map((message) => {
+          // Render "Add to Plan" button
+          if (message.text === '__ADD_TO_PLAN_BUTTON__') {
+            return (
+              <div key={message.id} className="flex justify-center my-4">
+                <Button 
+                  onClick={handleAddToPlan}
+                  className="gradient-healing shadow-lotus hover:scale-105 transition-ayur"
+                  size="lg"
+                >
+                  <Save size={18} className="mr-2" />
+                  Add to Wellness Plan
+                </Button>
+              </div>
+            );
+          }
+          
+          return (
+            <div
+              key={message.id}
+              className={`flex gap-3 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              {message.sender === 'agent' && (
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full gradient-healing flex items-center justify-center">
+                    <Bot size={16} className="text-white" />
+                  </div>
+                </div>
+              )}
+              
+              <div className={`max-w-[70%] ${message.sender === 'user' ? 'order-1' : ''}`}>
+                <div
+                  className={`p-3 rounded-lg ${
+                    message.sender === 'user'
+                      ? 'gradient-healing text-white'
+                      : 'bg-muted text-foreground'
+                  }`}
+                >
+                  <p className="whitespace-pre-line">{message.text}</p>
+                  <p className="text-xs opacity-70 mt-1">
+                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
                 </div>
               </div>
-            )}
-            
-            <div className={`max-w-[70%] ${message.sender === 'user' ? 'order-1' : ''}`}>
-              <div
-                className={`p-3 rounded-lg ${
-                  message.sender === 'user'
-                    ? 'gradient-healing text-white'
-                    : 'bg-muted text-foreground'
-                }`}
-              >
-                <p className="whitespace-pre-line">{message.text}</p>
-                <p className="text-xs opacity-70 mt-1">
-                  {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </p>
-              </div>
-            </div>
 
-            {message.sender === 'user' && (
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                  <User size={16} className="text-primary-foreground" />
+              {message.sender === 'user' && (
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                    <User size={16} className="text-primary-foreground" />
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        ))}
+              )}
+            </div>
+          );
+        })}
 
         {isTyping && (
           <div className="flex gap-3 justify-start">

@@ -22,6 +22,7 @@ interface Patient {
 interface AppState {
   userDosha: string;
   userAge: number | null;
+  userGender: string | null;
   recommendations: any;
   totalPoints: number;
   currentStreak: number;
@@ -33,6 +34,7 @@ interface AppState {
 interface AppContextType extends AppState {
   setUserDosha: (dosha: string) => void;
   setUserAge: (age: number) => void;
+  setUserGender: (gender: string) => void;
   setRecommendations: (recs: any) => void;
   addPoints: (points: number) => void;
   toggleTask: (taskId: string) => void;
@@ -68,6 +70,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return {
       userDosha: '',
       userAge: null,
+      userGender: null,
       recommendations: null,
       totalPoints: 0,
       currentStreak: 0,
@@ -93,6 +96,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const setUserAge = (age: number) => {
     setState(prev => ({ ...prev, userAge: age }));
+  };
+
+  const setUserGender = (gender: string) => {
+    setState(prev => ({ ...prev, userGender: gender }));
   };
 
   const setRecommendations = (recs: any) => {
@@ -156,6 +163,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setState({
       userDosha: '',
       userAge: null,
+      userGender: null,
       recommendations: null,
       totalPoints: 0,
       currentStreak: 0,
@@ -172,6 +180,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         ...state,
         setUserDosha,
         setUserAge,
+        setUserGender,
         setRecommendations,
         addPoints,
         toggleTask,
