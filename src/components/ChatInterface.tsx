@@ -11,6 +11,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useConversationMemory } from '@/hooks/useConversationMemory';
 import { useAppContext } from '@/contexts/AppContext';
 
+const CHAT_STORAGE_KEY = 'ayuragent-chat-v1';
+
 interface Message {
   id: string;
   text: string;
@@ -90,6 +92,27 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onRecommendationsUpdate }
     scrollToBottom();
   }, [messages]);
 
+  // LocalStorage: load persisted chat on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(CHAT_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed.messages)) {
+          setMessages(parsed.messages.map((m: any) => ({ ...m, timestamp: new Date(m.timestamp) })));
+        }
+        if (typeof parsed.questionSequence === 'number') setQuestionSequence(parsed.questionSequence);
+        if (parsed.userResponses) setUserResponses(parsed.userResponses);
+      }
+    } catch {}
+  }, []);
+
+  // LocalStorage: persist chat state
+  useEffect(() => {
+    const payload = { messages, questionSequence, userResponses };
+    localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(payload));
+  }, [messages, questionSequence, userResponses]);
+
   // Create new conversation on mount
   useEffect(() => {
     if (user && !conversationId) {
@@ -141,6 +164,23 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onRecommendationsUpdate }
     } catch (error) {
       console.error('Error saving message:', error);
     }
+  };
+
+  const reloadChatFromLocalStorage = () => {
+    try {
+      const saved = localStorage.getItem(CHAT_STORAGE_KEY);
+      if (!saved) {
+        toast({ title: 'No saved chat', description: 'Nothing to reload yet.' });
+        return;
+      }
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed.messages)) {
+        setMessages(parsed.messages.map((m: any) => ({ ...m, timestamp: new Date(m.timestamp) })));
+      }
+      if (typeof parsed.questionSequence === 'number') setQuestionSequence(parsed.questionSequence);
+      if (parsed.userResponses) setUserResponses(parsed.userResponses);
+      toast({ title: 'Chat reloaded', description: 'Restored from local storage.' });
+    } catch {}
   };
 
   const extractInsightsFromResponse = (response: string) => {
@@ -371,15 +411,25 @@ Format the response clearly and professionally.`;
             <p className="text-sm text-muted-foreground">Primary Dosha: {memory.dosha_analysis}</p>
           )}
         </div>
-        <Button 
-          onClick={handleExportChat}
-          variant="outline" 
-          size="sm"
-          className="flex items-center gap-2"
-        >
-          <Download size={16} />
-          Export PDF
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            onClick={reloadChatFromLocalStorage}
+            variant="outline" 
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            Refresh
+          </Button>
+          <Button 
+            onClick={handleExportChat}
+            variant="outline" 
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <Download size={16} />
+            Export PDF
+          </Button>
+        </div>
       </div>
 
       {/* Messages */}

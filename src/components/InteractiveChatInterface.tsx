@@ -13,6 +13,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useConversationMemory } from '@/hooks/useConversationMemory';
 import { useAppContext } from '@/contexts/AppContext';
 
+const INTERACTIVE_CHAT_STORAGE_KEY = 'ayuragent-chat-interactive-v1';
+
 interface Message {
   id: string;
   text: string;
@@ -83,6 +85,28 @@ const InteractiveChatInterface: React.FC<ChatInterfaceProps> = ({ onRecommendati
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // LocalStorage: load persisted interactive chat on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(INTERACTIVE_CHAT_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed.messages)) {
+          setMessages(parsed.messages.map((m: any) => ({ ...m, timestamp: new Date(m.timestamp) })));
+        }
+        if (typeof parsed.currentStep === 'number') setCurrentStep(parsed.currentStep);
+        if (parsed.userInputs) setUserInputs(parsed.userInputs);
+        if (parsed.pendingRecommendations) setPendingRecommendations(parsed.pendingRecommendations);
+      }
+    } catch {}
+  }, []);
+
+  // LocalStorage: persist interactive chat state
+  useEffect(() => {
+    const payload = { messages, currentStep, userInputs, pendingRecommendations };
+    localStorage.setItem(INTERACTIVE_CHAT_STORAGE_KEY, JSON.stringify(payload));
+  }, [messages, currentStep, userInputs, pendingRecommendations]);
 
   const steps = [
     {
@@ -333,6 +357,24 @@ Keep each bullet point SHORT (max 10 words). Format as bullet points without ** 
     }
   };
 
+  const reloadInteractiveChatFromLocalStorage = () => {
+    try {
+      const saved = localStorage.getItem(INTERACTIVE_CHAT_STORAGE_KEY);
+      if (!saved) {
+        toast({ title: 'No saved chat', description: 'Nothing to reload yet.' });
+        return;
+      }
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed.messages)) {
+        setMessages(parsed.messages.map((m: any) => ({ ...m, timestamp: new Date(m.timestamp) })));
+      }
+      if (typeof parsed.currentStep === 'number') setCurrentStep(parsed.currentStep);
+      if (parsed.userInputs) setUserInputs(parsed.userInputs);
+      if (parsed.pendingRecommendations) setPendingRecommendations(parsed.pendingRecommendations);
+      toast({ title: 'Chat reloaded', description: 'Restored from local storage.' });
+    } catch {}
+  };
+
   const parseRecommendationsIntoTasks = (response: string) => {
     const tasks: any[] = [];
     const lines = response.split('\n');
@@ -557,17 +599,27 @@ Keep each bullet point SHORT (max 10 words). Format as bullet points without ** 
               </Badge>
             )}
           </div>
-          {showingRecommendations && (
+          <div className="flex items-center gap-2">
             <Button 
-              onClick={() => exportConsultationHistory(messages, memory?.dosha_analysis)}
+              onClick={reloadInteractiveChatFromLocalStorage}
               variant="outline" 
               size="sm"
               className="bg-white/20 border-white/30 text-white hover:bg-white/30"
             >
-              <Download size={16} className="mr-2" />
-              Export PDF
+              Refresh
             </Button>
-          )}
+            {showingRecommendations && (
+              <Button 
+                onClick={() => exportConsultationHistory(messages, memory?.dosha_analysis)}
+                variant="outline" 
+                size="sm"
+                className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+              >
+                <Download size={16} className="mr-2" />
+                Export PDF
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 

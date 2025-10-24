@@ -56,6 +56,15 @@ const AppointmentScheduler = () => {
     '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM'
   ];
 
+  // Reschedule/Cancel dialog state
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [rescheduleTarget, setRescheduleTarget] = useState<Appointment | null>(null);
+  const [rescheduleDate, setRescheduleDate] = useState<Date>(new Date());
+  const [rescheduleTime, setRescheduleTime] = useState<string>('');
+  const [cancelReason, setCancelReason] = useState<string>('');
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+
   const handleSchedule = () => {
     if (!newAppointment.patientName || !newAppointment.time || !selectedDate) {
       toast({
@@ -113,11 +122,10 @@ const AppointmentScheduler = () => {
         <Card className="p-6 space-y-6">
           <h3 className="text-xl font-semibold">Schedule New Appointment</h3>
           
-          <Calendar
-            mode="single"
+          <DatePicker
             selected={selectedDate}
-            onSelect={setSelectedDate}
-            className="rounded-md border shadow-gentle"
+            onChange={(date) => setSelectedDate(date as Date)}
+            inline
           />
 
           <div className="space-y-4">
@@ -222,19 +230,17 @@ const AppointmentScheduler = () => {
                         Complete
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => {
-                        toast({ 
-                          title: 'Reschedule Appointment',
-                          description: 'Select a new date and time'
-                        });
+                        setRescheduleTarget(appointment);
+                        setRescheduleDate(appointment.date);
+                        setRescheduleTime(appointment.time);
+                        setRescheduleOpen(true);
                       }}>
                         Reschedule
                       </Button>
                       <Button size="sm" variant="destructive" onClick={() => {
-                        setAppointments(appointments.filter(apt => apt.id !== appointment.id));
-                        toast({ 
-                          title: '❌ Appointment Cancelled',
-                          description: `${appointment.patientName}'s appointment has been cancelled`
-                        });
+                        setRescheduleTarget(appointment);
+                        setCancelReason('');
+                        setCancelOpen(true);
                       }}>
                         Cancel
                       </Button>
@@ -251,6 +257,85 @@ const AppointmentScheduler = () => {
           </div>
         </Card>
       </div>
+
+      {/* Reschedule Dialog */}
+      <Dialog open={rescheduleOpen} onOpenChange={setRescheduleOpen}>
+        <DialogContent className="max-w-md bg-card/80 backdrop-blur-md border border-border/50">
+          <DialogHeader>
+            <DialogTitle>Reschedule Appointment</DialogTitle>
+          </DialogHeader>
+          {isProcessing ? (
+            <div className="space-y-3">
+              <div className="h-6 w-40 bg-muted/50 animate-pulse rounded" />
+              <div className="h-40 bg-muted/50 animate-pulse rounded" />
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <DatePicker selected={rescheduleDate} onChange={(date) => setRescheduleDate(date as Date)} inline />
+              <div>
+                <Label>Time Slot</Label>
+                <Select value={rescheduleTime} onValueChange={setRescheduleTime}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select time" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {timeSlots.map((slot) => (
+                      <SelectItem key={slot} value={slot}>{slot}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          <DialogFooter className="sm:justify-end gap-2">
+            <Button variant="outline" onClick={() => setRescheduleOpen(false)}>Cancel</Button>
+            <Button onClick={() => {
+              if (!rescheduleTarget) return;
+              setIsProcessing(true);
+              setAppointments(prev => prev.map(apt => apt.id === rescheduleTarget.id ? { ...apt, date: rescheduleDate, time: rescheduleTime || apt.time } : apt));
+              setTimeout(() => {
+                setIsProcessing(false);
+                setRescheduleOpen(false);
+                toast({ title: '✅ Rescheduled', description: `${rescheduleTarget.patientName} on ${format(rescheduleDate, 'PPP')} at ${rescheduleTime || rescheduleTarget.time}` });
+              }, 600);
+            }}>Confirm</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel Dialog */}
+      <Dialog open={cancelOpen} onOpenChange={setCancelOpen}>
+        <DialogContent className="max-w-md bg-card/80 backdrop-blur-md border border-border/50">
+          <DialogHeader>
+            <DialogTitle>Cancel Appointment</DialogTitle>
+          </DialogHeader>
+          {isProcessing ? (
+            <div className="space-y-3">
+              <div className="h-6 w-40 bg-muted/50 animate-pulse rounded" />
+              <div className="h-24 bg-muted/50 animate-pulse rounded" />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <Label htmlFor="reason">Reason</Label>
+              <Input id="reason" placeholder="Optional reason" value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} />
+            </div>
+          )}
+          <DialogFooter className="sm:justify-end gap-2">
+            <Button variant="outline" onClick={() => setCancelOpen(false)}>Back</Button>
+            <Button variant="destructive" onClick={() => {
+              if (!rescheduleTarget) return;
+              setIsProcessing(true);
+              setAppointments(prev => prev.map(apt => apt.id === rescheduleTarget.id ? { ...apt, status: 'cancelled', notes: cancelReason ? `${apt.notes || ''} (Cancelled: ${cancelReason})` : apt.notes } : apt));
+              setTimeout(() => {
+                setIsProcessing(false);
+                setCancelOpen(false);
+                toast({ title: '❌ Appointment Cancelled' });
+              }, 500);
+            }}>Confirm Cancel</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 };
