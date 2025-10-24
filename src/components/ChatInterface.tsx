@@ -280,14 +280,14 @@ Format the response clearly and professionally.`;
         // Extract insights
         extractInsightsFromResponse(agentReply);
         
-        // Store recommendations for later instead of auto-updating
+        // Store recommendations separately (not in userResponses)
         const recommendations = parseRecommendationsFromResponse(agentReply);
         
         // Add button prompt to review and add to wellness plan
         agentReply += '\n\n💡 Would you like to add these recommendations to your Wellness Plan? Click the button below to review and confirm.';
         
-        // Store recommendations in state for the button to use
-        setUserResponses(prev => ({ ...prev, pendingRecommendations: JSON.stringify(recommendations) }));
+        // Store recommendations temporarily
+        (window as any).__pendingChatRecommendations = recommendations;
       } else {
         // After recommendations, allow free-form conversation
         const contextualContext = getContextForAI();
@@ -313,7 +313,7 @@ Format the response clearly and professionally.`;
       setMessages(prev => [...prev, agentMessage]);
       
       // Add button after recommendations are generated
-      if (questionSequence === questions.length && userResponses.pendingRecommendations) {
+      if (questionSequence === questions.length && (window as any).__pendingChatRecommendations) {
         setTimeout(() => {
           const buttonMessage: Message = {
             id: (Date.now() + 2).toString(),
@@ -376,8 +376,8 @@ Format the response clearly and professionally.`;
   };
 
   const handleAddToPlan = () => {
-    if (userResponses.pendingRecommendations && onRecommendationsUpdate) {
-      const recommendations = JSON.parse(userResponses.pendingRecommendations);
+    const recommendations = (window as any).__pendingChatRecommendations;
+    if (recommendations && onRecommendationsUpdate) {
       onRecommendationsUpdate(recommendations);
       
       toast({
@@ -385,12 +385,9 @@ Format the response clearly and professionally.`;
         description: "Your personalized recommendations are now in your plan",
       });
       
-      // Remove the button and pending recommendations
+      // Remove the button and clear pending recommendations
       setMessages(prev => prev.filter(msg => msg.text !== '__ADD_TO_PLAN_BUTTON__'));
-      setUserResponses(prev => {
-        const { pendingRecommendations, ...rest } = prev;
-        return rest;
-      });
+      delete (window as any).__pendingChatRecommendations;
     }
   };
 

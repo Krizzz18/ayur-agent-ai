@@ -62,7 +62,7 @@ const AppointmentScheduler = () => {
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [rescheduleTarget, setRescheduleTarget] = useState<Appointment | null>(null);
-  const [rescheduleDate, setRescheduleDate] = useState<Date>(new Date());
+  const [rescheduleDate, setRescheduleDate] = useState<Date | undefined>(new Date());
   const [rescheduleTime, setRescheduleTime] = useState<string>('');
   const [cancelReason, setCancelReason] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
@@ -125,9 +125,10 @@ const AppointmentScheduler = () => {
           <h3 className="text-xl font-semibold">Schedule New Appointment</h3>
           
           <DatePicker
-            selected={selectedDate || null}
+            selected={selectedDate}
             onChange={(date: Date | null) => setSelectedDate(date || undefined)}
             inline
+            className="w-full"
           />
 
           <div className="space-y-4">
@@ -273,7 +274,12 @@ const AppointmentScheduler = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              <DatePicker selected={rescheduleDate} onChange={(date: Date | null) => date && setRescheduleDate(date)} inline />
+              <DatePicker 
+                selected={rescheduleDate} 
+                onChange={(date: Date | null) => setRescheduleDate(date || undefined)} 
+                inline
+                className="w-full"
+              />
               <div>
                 <Label>Time Slot</Label>
                 <Select value={rescheduleTime} onValueChange={setRescheduleTime}>
@@ -292,7 +298,7 @@ const AppointmentScheduler = () => {
           <DialogFooter className="sm:justify-end gap-2">
             <Button variant="outline" onClick={() => setRescheduleOpen(false)}>Cancel</Button>
             <Button onClick={() => {
-              if (!rescheduleTarget) return;
+              if (!rescheduleTarget || !rescheduleDate) return;
               setIsProcessing(true);
               setAppointments(prev => prev.map(apt => apt.id === rescheduleTarget.id ? { ...apt, date: rescheduleDate, time: rescheduleTime || apt.time } : apt));
               setTimeout(() => {

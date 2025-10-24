@@ -77,6 +77,7 @@ const InteractiveChatInterface: React.FC<ChatInterfaceProps> = ({ onRecommendati
   const { memory, addSymptom, addInsight, updateDoshaAnalysis, getContextForAI } = useConversationMemory();
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const lastShownStepRef = useRef<string | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -93,7 +94,13 @@ const InteractiveChatInterface: React.FC<ChatInterfaceProps> = ({ onRecommendati
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed.messages)) {
-          setMessages(parsed.messages.map((m: any) => ({ ...m, timestamp: new Date(m.timestamp) })));
+          const loadedMessages = parsed.messages.map((m: any) => ({ ...m, timestamp: new Date(m.timestamp) }));
+          setMessages(loadedMessages);
+          // Find the last widget message to prevent re-asking
+          const lastWidget = loadedMessages.slice().reverse().find((m: any) => m.type === 'widget' && m.widgetData?.id);
+          if (lastWidget) {
+            lastShownStepRef.current = lastWidget.widgetData.id;
+          }
         }
         if (typeof parsed.currentStep === 'number') setCurrentStep(parsed.currentStep);
         if (parsed.userInputs) setUserInputs(parsed.userInputs);
@@ -261,11 +268,10 @@ const InteractiveChatInterface: React.FC<ChatInterfaceProps> = ({ onRecommendati
     setMessages(prev => [...prev, userMessage]);
     setIsTyping(true);
 
-    // Move to next step or generate recommendations
+    // Move to next step or generate recommendations (let useEffect show next question)
     if (currentStep < steps.length - 1) {
       setTimeout(() => {
         setCurrentStep(prev => prev + 1);
-        showNextQuestion();
         setIsTyping(false);
       }, 1000);
     } else {
@@ -276,19 +282,7 @@ const InteractiveChatInterface: React.FC<ChatInterfaceProps> = ({ onRecommendati
     }
   };
 
-  const showNextQuestion = () => {
-    const step = steps[currentStep];
-    const questionMessage: Message = {
-      id: (Date.now() + 1).toString(),
-      text: step.title,
-      sender: 'agent',
-      timestamp: new Date(),
-      type: 'widget',
-      widgetData: step
-    };
-
-    setMessages(prev => [...prev, questionMessage]);
-  };
+  // Removed showNextQuestion - now handled by useEffect watching currentStep
 
   const generateAyurvedicRecommendations = async () => {
     try {
@@ -419,14 +413,37 @@ Keep each bullet point SHORT (max 10 words). Format as bullet points without ** 
     }
   };
 
-  // Initialize first question
+  // Show question when step changes (prevents duplicate questions)
   useEffect(() => {
-    if (messages.length === 1) {
-      setTimeout(() => {
-        showNextQuestion();
-      }, 2000);
-    }
-  }, []);
+    if (currentStep >= steps.length || showingRecommendations) return;
+    
+    const step = steps[currentStep];
+    if (!step || lastShownStepRef.current === step.id) return;
+    
+    const timeoutId = setTimeout(() => {
+      const questionMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: step.title,
+        sender: 'agent',
+        timestamp: new Date(),
+        type: 'widget',
+        widgetData: step
+      };
+      
+      setMessages(prev => {
+        // Check if this exact question is already the last message
+        const lastMsg = prev[prev.length - 1];
+        if (lastMsg?.type === 'widget' && lastMsg.widgetData?.id === step.id) {
+          return prev;
+        }
+        return [...prev, questionMessage];
+      });
+      
+      lastShownStepRef.current = step.id;
+    }, messages.length === 1 ? 2000 : 0);
+    
+    return () => clearTimeout(timeoutId);
+  }, [currentStep, showingRecommendations]);
 
   const renderWidget = (step: any) => {
     switch (step.type) {

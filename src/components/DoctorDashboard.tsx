@@ -114,7 +114,7 @@ const DoctorDashboard = () => {
               New Treatment Plan
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto backdrop-blur-xl bg-background/95 border-border/50">
             <DialogHeader>
               <DialogTitle>Create Treatment Plan</DialogTitle>
             </DialogHeader>
@@ -266,7 +266,7 @@ const DoctorDashboard = () => {
       {/* View Treatment Dialog */}
       {viewTreatment && (
         <Dialog open={!!viewTreatment} onOpenChange={() => setViewTreatment(null)}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto backdrop-blur-xl bg-background/95 border-border/50">
             <DialogHeader>
               <DialogTitle>Treatment Plan Details</DialogTitle>
             </DialogHeader>
