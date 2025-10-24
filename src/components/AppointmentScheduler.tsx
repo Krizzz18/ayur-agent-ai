@@ -4,11 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Calendar as CalendarIcon, Clock, User, Video, MapPin, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 interface Appointment {
   id: string;
@@ -123,8 +125,8 @@ const AppointmentScheduler = () => {
           <h3 className="text-xl font-semibold">Schedule New Appointment</h3>
           
           <DatePicker
-            selected={selectedDate}
-            onChange={(date) => setSelectedDate(date as Date)}
+            selected={selectedDate || null}
+            onChange={(date: Date | null) => setSelectedDate(date || undefined)}
             inline
           />
 
@@ -271,7 +273,7 @@ const AppointmentScheduler = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              <DatePicker selected={rescheduleDate} onChange={(date) => setRescheduleDate(date as Date)} inline />
+              <DatePicker selected={rescheduleDate} onChange={(date: Date | null) => date && setRescheduleDate(date)} inline />
               <div>
                 <Label>Time Slot</Label>
                 <Select value={rescheduleTime} onValueChange={setRescheduleTime}>
