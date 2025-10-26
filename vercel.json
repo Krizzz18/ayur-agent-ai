@@ -1,0 +1,12 @@
+{
+  "buildCommand": "cd ayur-agent-ai-main && npm install && npm run build",
+  "outputDirectory": "ayur-agent-ai-main/dist",
+  "installCommand": "cd ayur-agent-ai-main && npm install",
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
