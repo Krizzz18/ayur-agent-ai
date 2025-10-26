@@ -1,0 +1,241 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* AyurAgent Design System - Ayurvedic inspired colors and gradients
+All colors MUST be HSL for theme consistency.
+*/
+
+@layer base {
+  :root {
+    /* Ayurvedic Color Palette */
+    --background: 35 20% 97%;
+    --foreground: 25 40% 15%;
+
+    --card: 35 15% 98%;
+    --card-foreground: 25 40% 15%;
+
+    --popover: 35 15% 98%;
+    --popover-foreground: 25 40% 15%;
+
+    /* Vata - Air & Space (Purple-Gray tones) */
+    --primary: 250 30% 25%;
+    --primary-foreground: 35 20% 97%;
+
+    /* Pitta - Fire & Water (Golden-Orange tones) */
+    --secondary: 35 65% 55%;
+    --secondary-foreground: 35 20% 97%;
+
+    /* Kapha - Earth & Water (Green-Brown tones) */
+    --tertiary: 120 25% 35%;
+    --tertiary-foreground: 35 20% 97%;
+
+    --muted: 35 15% 92%;
+    --muted-foreground: 25 25% 45%;
+
+    --accent: 35 65% 55%;
+    --accent-foreground: 35 20% 97%;
+
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 35 20% 97%;
+
+    --border: 35 20% 85%;
+    --input: 35 15% 95%;
+    --ring: 35 65% 55%;
+
+    --radius: 0.75rem;
+
+    /* Ayurvedic Gradients */
+    --gradient-vata: linear-gradient(135deg, hsl(250 30% 25%), hsl(280 25% 35%));
+    --gradient-pitta: linear-gradient(135deg, hsl(35 65% 55%), hsl(25 75% 65%));
+    --gradient-kapha: linear-gradient(135deg, hsl(120 25% 35%), hsl(140 30% 45%));
+    --gradient-healing: linear-gradient(135deg, hsl(35 65% 55%), hsl(120 25% 35%));
+    
+    /* Shadows with Ayurvedic warmth */
+    --shadow-lotus: 0 8px 25px -8px hsl(35 65% 55% / 0.3);
+    --shadow-gentle: 0 4px 15px -4px hsl(25 40% 15% / 0.1);
+    
+    /* Animations */
+    --transition-ayur: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 25 25% 8%;
+    --foreground: 35 20% 92%;
+
+    --card: 25 25% 10%;
+    --card-foreground: 35 20% 92%;
+
+    --popover: 25 25% 10%;
+    --popover-foreground: 35 20% 92%;
+
+    --primary: 35 65% 55%;
+    --primary-foreground: 25 25% 8%;
+
+    --secondary: 25 35% 20%;
+    --secondary-foreground: 35 20% 92%;
+
+    --tertiary: 120 25% 25%;
+    --tertiary-foreground: 35 20% 92%;
+
+    --muted: 25 25% 15%;
+    --muted-foreground: 35 15% 65%;
+
+    --accent: 35 65% 55%;
+    --accent-foreground: 25 25% 8%;
+
+    --destructive: 0 65% 45%;
+    --destructive-foreground: 35 20% 92%;
+
+    --border: 25 25% 18%;
+    --input: 25 25% 15%;
+    --ring: 35 65% 55%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  /* Ayur Classic Theme */
+  .ayur-classic {
+    --background: 45 30% 96%;
+    --foreground: 35 45% 12%;
+    --card: 45 25% 98%;
+    --card-foreground: 35 45% 12%;
+    --primary: 45 80% 45%;
+    --primary-foreground: 45 25% 98%;
+    --secondary: 35 60% 60%;
+    --secondary-foreground: 35 25% 98%;
+    --tertiary: 120 30% 40%;
+    --tertiary-foreground: 35 25% 98%;
+    --muted: 45 20% 90%;
+    --muted-foreground: 35 30% 40%;
+    --accent: 45 80% 45%;
+    --accent-foreground: 45 25% 98%;
+    --border: 45 25% 82%;
+    --input: 45 20% 93%;
+    --ring: 45 80% 45%;
+  }
+
+  /* Ayur Forest Theme */
+  .ayur-forest {
+    --background: 140 25% 95%;
+    --foreground: 140 60% 8%;
+    --card: 140 20% 97%;
+    --card-foreground: 140 60% 8%;
+    --primary: 140 50% 35%;
+    --primary-foreground: 140 20% 97%;
+    --secondary: 160 40% 45%;
+    --secondary-foreground: 140 20% 97%;
+    --tertiary: 100 35% 40%;
+    --tertiary-foreground: 140 20% 97%;
+    --muted: 140 15% 88%;
+    --muted-foreground: 140 35% 35%;
+    --accent: 140 50% 35%;
+    --accent-foreground: 140 20% 97%;
+    --border: 140 20% 80%;
+    --input: 140 15% 92%;
+    --ring: 140 50% 35%;
+  }
+
+  /* Ayur Sunset Theme */
+  .ayur-sunset {
+    --background: 20 40% 94%;
+    --foreground: 20 60% 10%;
+    --card: 20 35% 96%;
+    --card-foreground: 20 60% 10%;
+    --primary: 15 75% 50%;
+    --primary-foreground: 20 35% 96%;
+    --secondary: 35 70% 55%;
+    --secondary-foreground: 20 35% 96%;
+    --tertiary: 5 65% 45%;
+    --tertiary-foreground: 20 35% 96%;
+    --muted: 20 25% 87%;
+    --muted-foreground: 20 40% 30%;
+    --accent: 15 75% 50%;
+    --accent-foreground: 20 35% 96%;
+    --border: 20 30% 78%;
+    --input: 20 25% 90%;
+    --ring: 15 75% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  .gradient-vata {
+    background: var(--gradient-vata);
+  }
+
+  .gradient-pitta {
+    background: var(--gradient-pitta);
+  }
+
+  .gradient-kapha {
+    background: var(--gradient-kapha);
+  }
+
+  .gradient-healing {
+    background: var(--gradient-healing);
+  }
+
+  .shadow-lotus {
+    box-shadow: var(--shadow-lotus);
+  }
+
+  .shadow-gentle {
+    box-shadow: var(--shadow-gentle);
+  }
+
+  .transition-ayur {
+    transition: var(--transition-ayur);
+  }
+
+  /* Lotus animation for loading states */
+  @keyframes lotus-bloom {
+    0% { transform: scale(0.8) rotate(0deg); opacity: 0.6; }
+    50% { transform: scale(1.1) rotate(180deg); opacity: 0.9; }
+    100% { transform: scale(1) rotate(360deg); opacity: 1; }
+  }
+
+  .lotus-bloom {
+    animation: lotus-bloom 2s ease-in-out infinite;
+  }
+
+  /* Gentle pulse for breathing exercises */
+  @keyframes gentle-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.05); opacity: 1; }
+  }
+
+  .gentle-pulse {
+    animation: gentle-pulse 3s ease-in-out infinite;
+  }
+}
