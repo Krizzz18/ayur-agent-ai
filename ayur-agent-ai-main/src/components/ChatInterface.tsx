@@ -353,13 +353,19 @@ Format the response clearly and professionally.`;
 
     } catch (error: any) {
       console.error('Error generating reply:', error);
+      const raw = error?.message || String(error);
+      // Surface actionable error to user; our gemini.ts already formats with emojis
+      const friendly = raw.startsWith('❌') || raw.startsWith('⏳') || raw.startsWith('🔒') || raw.startsWith('🌐') || raw.startsWith('🤖')
+        ? raw
+        : `I apologize, respected one. ${raw || 'I am having difficulty connecting at the moment. Please try again shortly.'}`;
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: 'I apologize, respected one. I am having difficulty connecting at the moment. Please try again shortly.',
+        text: friendly,
         sender: 'agent',
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, errorMessage]);
+      toast({ title: "Chat error", description: friendly, variant: "destructive" });
     } finally {
       setIsTyping(false);
     }
@@ -528,12 +534,20 @@ Format the response clearly and professionally.`;
           </div>
         )}
         
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} aria-live="polite" aria-atomic="true" />
       </div>
 
       {/* Message Input */}
       <div className="p-4 border-t border-border">
-        <div className="flex gap-2">
+        <form 
+          className="flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSendMessage();
+          }}
+          role="form"
+          aria-label="Chat message form"
+        >
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
@@ -541,16 +555,24 @@ Format the response clearly and professionally.`;
             placeholder="Share your symptoms, lifestyle, or ask about Ayurvedic remedies..."
             className="flex-1"
             disabled={isTyping}
+            aria-label="Type your message"
+            aria-describedby="chat-input-hint"
+            aria-required="true"
           />
+          <span id="chat-input-hint" className="sr-only">
+            Press Enter or click send button to submit your message
+          </span>
           <Button 
             onClick={handleSendMessage}
             disabled={!inputValue.trim() || isTyping}
             variant="healing"
             size="icon"
+            type="submit"
+            aria-label={isTyping ? "AI is typing..." : "Send message"}
           >
-            <Send size={16} />
+            <Send size={16} aria-hidden="true" />
           </Button>
-        </div>
+        </form>
       </div>
     </Card>
   );

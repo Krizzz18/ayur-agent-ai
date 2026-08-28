@@ -2,3 +2,6 @@ Flask
 Flask-Cors
 google-generativeai
 python-dotenv
+numpy
+joblib
+scikit-learn

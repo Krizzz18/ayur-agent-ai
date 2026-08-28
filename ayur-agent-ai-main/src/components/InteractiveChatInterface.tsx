@@ -346,8 +346,20 @@ Keep each bullet point SHORT (max 10 words). Format as bullet points without ** 
       setShowingRecommendations(true);
       setIsTyping(false);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating recommendations:', error);
+      const raw = error?.message || String(error);
+      const friendly = raw.startsWith('❌') || raw.startsWith('⏳') || raw.startsWith('🔒') || raw.startsWith('🌐') || raw.startsWith('🤖')
+        ? raw
+        : `⚠️ Could not generate recommendations: ${raw}`;
+      const errMsg: Message = {
+        id: (Date.now() + 99).toString(),
+        text: friendly,
+        sender: 'agent',
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errMsg]);
+      toast({ title: "Recommendation failed", description: friendly, variant: "destructive" });
       setIsTyping(false);
     }
   };

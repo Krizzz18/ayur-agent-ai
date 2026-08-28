@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,13 +7,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Download, Edit, Eye, Trash2 } from 'lucide-react';
+import { Plus, Download, Edit, Eye, Trash2, Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
 import { useAppContext } from '@/contexts/AppContext';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import jsPDF from 'jspdf';
 
 const DoctorDashboard = () => {
-  const { patients, treatmentPlans, addTreatmentPlan, updateTreatmentPlan, deleteTreatmentPlan } = useAppContext();
+  const { treatmentPlans, addTreatmentPlan, updateTreatmentPlan, deleteTreatmentPlan } = useAppContext();
   const { toast } = useToast();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -21,6 +22,12 @@ const DoctorDashboard = () => {
   const [viewTreatment, setViewTreatment] = useState<any>(null);
   const [editingPlan, setEditingPlan] = useState<any>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Supabase data states
+  const [patients, setPatients] = useState<any[]>([]);
+  const [consultations, setConsultations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     diagnosis: '',
@@ -29,6 +36,47 @@ const DoctorDashboard = () => {
     lifestyle: '',
     followUp: '',
   });
+
+  // Fetch real data from Supabase
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch profiles (patients)
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (profilesError) throw profilesError;
+
+        // Fetch consultations
+        const { data: consultationsData, error: consultationsError } = await supabase
+          .from('consultations')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (consultationsError) throw consultationsError;
+
+        setPatients(profilesData || []);
+        setConsultations(consultationsData || []);
+      } catch (err: any) {
+        console.error('Error fetching dashboard data:', err);
+        setError(err.message || 'Failed to load data');
+        toast({
+          title: '❌ Error',
+          description: 'Failed to load patient data. Please try again.',
+          variant: 'destructive'
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [toast]);
 
   const handleAddTreatment = () => {
     if (!selectedPatient) {
@@ -71,13 +119,28 @@ const DoctorDashboard = () => {
   const handleDeleteTreatment = (planId: string, patientName: string) => {
     if (isDeleting) return; // Prevent race condition
     
-    if (confirm(`Delete treatment plan for ${patientName}?`)) {
+    // Validate patient name exists
+    const displayName = patientName || 'this patient';
+    
+    if (confirm(`Delete treatment plan for ${displayName}?`)) {
       setIsDeleting(true);
-      deleteTreatmentPlan(planId);
-      toast({ title: '🗑️ Plan Deleted', description: `Treatment plan for ${patientName} removed` });
       
-      // Reset delete lock after delay
-      setTimeout(() => setIsDeleting(false), 500);
+      try {
+        deleteTreatmentPlan(planId);
+        toast({ 
+          title: '🗑️ Plan Deleted', 
+          description: `Treatment plan for ${displayName} removed` 
+        });
+      } catch (error) {
+        toast({
+          title: '❌ Delete Failed',
+          description: 'Could not delete treatment plan. Please try again.',
+          variant: 'destructive'
+        });
+      } finally {
+        // Reset delete lock after delay
+        setTimeout(() => setIsDeleting(false), 500);
+      }
     }
   };
 
@@ -157,15 +220,46 @@ const DoctorDashboard = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Doctor Dashboard</h2>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              New Treatment Plan
-            </Button>
-          </DialogTrigger>
+      {/* Loading State */}
+      {loading && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-3 text-muted-foreground">Loading patient data...</span>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && !loading && (
+        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-destructive">
+            <AlertTriangle className="h-5 w-5" />
+            <span className="font-medium">Failed to load data</span>
+          </div>
+          <p className="text-sm text-muted-foreground mt-1">{error}</p>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="mt-3"
+            onClick={() => window.location.reload()}
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Retry
+          </Button>
+        </div>
+      )}
+
+      {/* Main Content - only show when not loading and no error */}
+      {!loading && !error && (
+        <React.Fragment>
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold">Doctor Dashboard</h2>
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  New Treatment Plan
+                </Button>
+              </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto backdrop-blur-xl bg-background/95 border-border/50">
             <DialogHeader>
               <DialogTitle>Create Treatment Plan</DialogTitle>
@@ -489,7 +583,9 @@ const DoctorDashboard = () => {
               </Button>
             </div>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        )}
+        </React.Fragment>
       )}
     </div>
   );

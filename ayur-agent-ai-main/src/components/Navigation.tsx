@@ -27,12 +27,21 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
   ];
 
   return (
-    <nav className="bg-card border-r border-border h-full w-64 p-4 flex flex-col">
+    <nav 
+      className="bg-card border-r border-border h-full w-64 p-4 flex flex-col"
+      aria-label="Main navigation"
+      role="navigation"
+    >
       {/* Logo and Theme Toggle */}
       <div className="mb-8 pb-4 border-b border-border">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
-            <img src={lotusIcon} alt="AyurAgent" className="w-10 h-10 lotus-bloom" />
+            <img 
+              src={lotusIcon} 
+              alt="AyurAgent logo - lotus flower" 
+              className="w-10 h-10 lotus-bloom"
+              role="img"
+            />
             <div>
               <h1 className="text-xl font-bold text-foreground">AyurAgent</h1>
               <p className="text-sm text-muted-foreground">AI Ayurvedic Wellness</p>
@@ -41,7 +50,11 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
           <ThemeToggle />
         </div>
         {!user && (
-          <div className="bg-accent/50 border border-accent-foreground/20 rounded-lg p-3 mt-3">
+          <div 
+            className="bg-accent/50 border border-accent-foreground/20 rounded-lg p-3 mt-3"
+            role="complementary"
+            aria-label="Guest mode notification"
+          >
             <p className="text-xs text-muted-foreground text-center">
               🌟 Exploring as Guest
             </p>
@@ -49,6 +62,7 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
               size="sm" 
               className="w-full mt-2" 
               onClick={() => window.location.href = '/auth'}
+              aria-label="Sign up for free account"
             >
               Sign Up Free
             </Button>
@@ -57,17 +71,25 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
       </div>
 
       {/* Navigation Items */}
-      <div className="space-y-2 flex-1">
+      <div 
+        className="space-y-2 flex-1"
+        role="menu"
+        aria-label="Navigation menu"
+      >
         {navItems.map((item) => {
           const Icon = item.icon;
+          const isActive = activeTab === item.id;
           return (
             <Button
               key={item.id}
-              variant={activeTab === item.id ? 'healing' : 'ghost'}
+              variant={isActive ? 'healing' : 'ghost'}
               className="w-full justify-start gap-3"
               onClick={() => onTabChange(item.id)}
+              role="menuitem"
+              aria-label={`Navigate to ${item.label}`}
+              aria-current={isActive ? 'page' : undefined}
             >
-              <Icon size={20} />
+              <Icon size={20} aria-hidden="true" />
               {item.label}
             </Button>
           );

@@ -8,7 +8,11 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "test:watch": "vitest --watch"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -50,6 +54,7 @@
     "i": "^0.3.7",
     "input-otp": "^1.4.2",
     "jspdf": "^3.0.3",
+    "jspdf-autotable": "^5.0.8",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",
     "react": "^18.3.1",
@@ -64,11 +69,13 @@
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.9",
+    "workbox-window": "^7.3.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
     "@tailwindcss/typography": "^0.5.16",
+    "@tanstack/react-virtual": "^3.13.12",
     "@types/node": "^22.16.5",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
@@ -83,6 +90,8 @@
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.38.0",
-    "vite": "^7.1.12"
+    "vite": "^7.1.12",
+    "vite-plugin-pwa": "^1.1.0",
+    "web-vitals": "^5.1.0"
   }
 }
